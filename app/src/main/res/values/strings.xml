@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">GPSPractice</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="Message1">Enter location</string>
+    <string name="Message2">Max travel time</string>
+    <string name="Message3">Mode of transport</string>
+    <string name="button_send">Send</string>
+</resources>
