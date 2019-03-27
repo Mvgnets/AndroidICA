@@ -43,12 +43,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         Intent intent = getIntent();
-        String myLatLong = intent.getStringExtra(MainActivity.LatLong);
-        myLatLong = myLatLong.substring(10, myLatLong.length() - 1);
-        System.out.println(myLatLong);
-        String[] splitter = myLatLong.split(",");
-        lattitude = Float.parseFloat(splitter[0]);
-        longitude = Float.parseFloat(splitter[1]);
+        if (intent.getStringExtra(MainActivity.LatLong) != null) {
+            String myLatLong = intent.getStringExtra(MainActivity.LatLong);
+            myLatLong = myLatLong.substring(10, myLatLong.length() - 1);
+            String[] splitter = myLatLong.split(",");
+            lattitude = Float.parseFloat(splitter[0]);
+            longitude = Float.parseFloat(splitter[1]);
+        }
+        if (intent.getStringExtra(MainActivity.Latitude) != null) {
+            String myLat = intent.getStringExtra(MainActivity.Latitude);
+            String myLong = intent.getStringExtra(MainActivity.Longitude);
+            System.out.println("your lattitude is" + myLat);
+            System.out.println("your long is" + myLong);
+            lattitude = Float.parseFloat(myLat);
+            longitude = Float.parseFloat(myLong);
+
+        }
+
     }
 
 
