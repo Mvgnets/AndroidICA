@@ -13,6 +13,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -92,15 +98,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
-
-        /*
-        Intent intent = new Intent(this, MapsActivity.class);
-        String myLatLong = myPlace.getLatLng().toString();
-        String myPlaceID = myPlace.getId().toString();
-        intent.putExtra(LatLong, myLatLong);
-        intent.putExtra(PlaceID, myPlaceID);
-        startActivity(intent);
-        */
 
     }
 

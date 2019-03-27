@@ -16,7 +16,7 @@
         android:inputType="textPersonName"
         android:text="@string/Message2"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button2" />
+        app:layout_constraintTop_toBottomOf="@+id/useCurrLocation" />
 
     <EditText
         android:id="@+id/editText4"
@@ -54,7 +54,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/useCurrLocation"
         android:layout_width="115dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
