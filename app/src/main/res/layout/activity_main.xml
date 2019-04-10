@@ -16,7 +16,7 @@
         android:inputType="textPersonName"
         android:text="@string/Message2"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/useCurrLocation" />
+        app:layout_constraintTop_toBottomOf="@+id/weatherBox" />
 
     <EditText
         android:id="@+id/editText4"
@@ -53,13 +53,12 @@
         app:layout_constraintStart_toEndOf="@+id/editText2"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/useCurrLocation"
-        android:layout_width="115dp"
+    <TextView
+        android:id="@+id/weatherBox"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:onClick="currentLocation"
-        android:text="Use current location"
+        android:text="TextView"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/autocomplete_fragment" />

@@ -12,7 +12,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -34,8 +37,11 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -48,6 +54,12 @@ public class MainActivity extends AppCompatActivity {
     Place myPlace;
     private FusedLocationProviderClient fusedLocationClient;
     Intent intent;
+    TextView weatherBox;
+    public static final String BASE_URL = "api.openweathermap.org/data/2.5/weather?";
+    public static final String NOTIFICATION_CHANNEL_ID = "Weather obtained";
+
+    String myLat = "1";
+    String myLong = "1";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +68,21 @@ public class MainActivity extends AppCompatActivity {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.RECEIVE_SMS, Manifest.permission.CALL_PHONE}, 1);
+            return; //ask for the permissions the app requires
+        }
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            myLat = Double.toString(location.getLatitude());
+                            myLong = Double.toString(location.getLongitude());
+                            weather(myLat, myLong);
+                        }
+                    }
+                });
         // Initialize the AutocompleteSupportFragment.
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
@@ -68,6 +95,12 @@ public class MainActivity extends AppCompatActivity {
                 // TODO: Get info about the selected place.
                 Log.i(TAG, "Place: " + place.getName() + ", " + place.getId());
                 myPlace = place;
+                String[] splitter = myPlace.getLatLng().toString().split(",");
+                myLat = splitter[0].substring(10);
+                System.out.println(myLat);
+                myLong = splitter[1].substring(0, 8);
+                System.out.println(myLong);
+                weather(myLat, myLong);
             }
 
             @Override
@@ -76,29 +109,12 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "An error occurred: " + status);
             }
         });
-
         intent = new Intent(this, MapsActivity.class);
     }
 
     public void currentLocation(View view) {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.RECEIVE_SMS, Manifest.permission.CALL_PHONE}, 1);
-            return; //ask for the permissions the app requires
-        }
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (location != null) {
-                            String myLat = Double.toString(location.getLatitude());
-                            String myLong = Double.toString(location.getLongitude());
-                            intent.putExtra(Latitude, myLat);
-                            intent.putExtra(Longitude, myLong);
-
-                        }
-                    }
-                });
-
+        intent.putExtra(Latitude, myLat);
+        intent.putExtra(Longitude, myLong);
     }
 
     public void sendMessage(View view) {
@@ -114,5 +130,40 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public void weather(String latitude, String longitude) {
+        weatherBox = findViewById(R.id.weatherBox);
+
+        Response.Listener<String> mResponseHandler = new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                final String[] splitter = response.split(",");
+                weatherBox.setText("The temperature at your chosen location is: " + (Math.round(Double.parseDouble(splitter[7].substring(15)) - 273.15)) + "\u00b0 C");
+            }
+        };
+        Response.ErrorListener mErrorListener = new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, error.getMessage());
+            }
+        };
+        //Use the volley library to fetch a list of the horse images
+        //
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        StringRequest weatherListing = new StringRequest(
+                Request.Method.GET,
+                "http://api.openweathermap.org/data/2.5/weather?lat=" + myLat + "&lon=" + myLong + "&APPID=646c6ad8b825a8fe88fb21654deab612",
+                mResponseHandler,
+                mErrorListener) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                final String authz = "646c6ad8b825a8fe88fb21654deab612";
+                HashMap<String, String> headers = new HashMap<>();
+                headers.put("Authorization", "Basic " + authz);
+                return headers;
+            }
+        };
+        queue.add(weatherListing);
+    }
 }
 
