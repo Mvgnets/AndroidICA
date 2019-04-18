@@ -5,4 +5,10 @@
     <string name="Message2">Max travel time</string>
     <string name="Message3">Mode of transport</string>
     <string name="button_send">Send</string>
+    <string name="Weather">weather</string>
+    <string-array name="transport">
+        <item>Walking</item>
+        <item>Driving</item>
+        <item>Cycling</item>
+    </string-array>
 </resources>
