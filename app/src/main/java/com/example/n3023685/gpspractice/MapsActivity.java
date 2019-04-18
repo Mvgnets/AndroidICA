@@ -34,7 +34,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     float lattitude;
     float longitude;
     public final String TAG = MapsActivity.class.getSimpleName();
-    final ImageView imageView = findViewById(R.id.photoView);
+
     LatLng newMarker;
     Marker poiMarker;
 
@@ -91,6 +91,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onPoiClick(PointOfInterest poi) {
         final PlacesClient placesClient = Places.createClient(this);
+        final ImageView imageView = findViewById(R.id.photoView);
         newMarker = new LatLng(poi.latLng.latitude, poi.latLng.longitude);
         poiMarker = mMap.addMarker(new MarkerOptions().position(newMarker).title("Here is your marker"));
         // Define a Place ID.
@@ -129,10 +130,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             });
         });
     }
-
+/*
     public void onPoiSecondClick(PointOfInterest poi) {
         poiMarker.remove();
         imageView.setVisibility(View.INVISIBLE);
     }
+    */
 
 }

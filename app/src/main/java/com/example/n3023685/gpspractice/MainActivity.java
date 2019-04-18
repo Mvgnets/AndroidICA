@@ -136,8 +136,10 @@ public class MainActivity extends AppCompatActivity {
         Response.Listener<String> mResponseHandler = new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                final String[] splitter = response.split(",");
-                weatherBox.setText("The temperature at your chosen location is: " + (Math.round(Double.parseDouble(splitter[7].substring(15)) - 273.15)) + "\u00b0 C");
+                final String[] splitter = response.split("temp");
+                String temperature = splitter[1].substring(2, 5);
+                System.out.println(temperature);
+                weatherBox.setText("The temperature at your chosen location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C");
             }
         };
         Response.ErrorListener mErrorListener = new Response.ErrorListener() {
