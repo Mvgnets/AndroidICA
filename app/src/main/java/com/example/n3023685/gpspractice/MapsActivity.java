@@ -1,12 +1,18 @@
 package com.example.n3023685.gpspractice;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.ApiException;
@@ -34,7 +40,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     float lattitude;
     float longitude;
     public final String TAG = MapsActivity.class.getSimpleName();
-
+    SupportMapFragment mapFragment;
     LatLng newMarker;
     Marker poiMarker;
 
@@ -43,7 +49,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         Intent intent = getIntent();
@@ -57,8 +63,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (intent.getStringExtra(MainActivity.Latitude) != null) {
             String myLat = intent.getStringExtra(MainActivity.Latitude);
             String myLong = intent.getStringExtra(MainActivity.Longitude);
-            System.out.println("your lattitude is" + myLat);
-            System.out.println("your long is" + myLong);
             lattitude = Float.parseFloat(myLat);
             longitude = Float.parseFloat(myLong);
 
@@ -90,6 +94,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onPoiClick(PointOfInterest poi) {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE); // the results will be higher than using the activity context object or the getWindowManager() shortcut
+        wm.getDefaultDisplay().getMetrics(displayMetrics);
+        int screenHeight = displayMetrics.heightPixels;
+        //resizeFragment(mapFragment, RelativeLayout.LayoutParams.MATCH_PARENT, 1000);
+        FrameLayout mapLayout = findViewById(R.id.mapFrame);
+        mapLayout.getLayoutParams().height = (int) Math.round(screenHeight * 0.75);
         final PlacesClient placesClient = Places.createClient(this);
         final ImageView imageView = findViewById(R.id.photoView);
         newMarker = new LatLng(poi.latLng.latitude, poi.latLng.longitude);
@@ -130,11 +141,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             });
         });
     }
-/*
-    public void onPoiSecondClick(PointOfInterest poi) {
-        poiMarker.remove();
-        imageView.setVisibility(View.INVISIBLE);
-    }
-    */
 
+    public void clearMarkers(View view) {
+        mMap.clear();
+        FrameLayout mapLayout = findViewById(R.id.mapFrame);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE); // the results will be higher than using the activity context object or the getWindowManager() shortcut
+        wm.getDefaultDisplay().getMetrics(displayMetrics);
+        int screenHeight = displayMetrics.heightPixels;
+        mapLayout.getLayoutParams().height = screenHeight;
+    }
 }
