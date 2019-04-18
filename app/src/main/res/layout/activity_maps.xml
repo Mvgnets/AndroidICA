@@ -2,25 +2,46 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.example.n3023685.gpspractice.Maps2Activity">
+    android:layout_height="match_parent">
 
     <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:id="@+id/mapFrame"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0">
 
-        <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:map="http://schemas.android.com/apk/res-auto"
-            xmlns:tools="http://schemas.android.com/tools"
+        <Button
+            android:id="@+id/clearMarkers"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="clearMarkers"
+            android:text="Clear Mark" />
+
+        <fragment
             android:id="@+id/map"
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            map:layout_constraintLeft_toLeftOf="parent"
-            map:layout_constraintRight_toRightOf="parent"
-            map:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:context="com.example.n3023685.gpspractice.MapsActivity" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/photoFrame"
+        android:layout_width="wrap_content"
+        android:layout_height="135dp"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mapFrame">
 
         <ImageView
             android:id="@+id/photoView"
@@ -36,6 +57,12 @@
             app:layout_constraintTop_toBottomOf="@+id/map"
             app:layout_constraintVertical_bias="1.0" />
 
-
     </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/imageScroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"></LinearLayout>
+
 </android.support.constraint.ConstraintLayout>

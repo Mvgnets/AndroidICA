@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
     String myLat = "1";
     String myLong = "1";
+    String placeName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,9 +98,7 @@ public class MainActivity extends AppCompatActivity {
                 myPlace = place;
                 String[] splitter = myPlace.getLatLng().toString().split(",");
                 myLat = splitter[0].substring(10);
-                System.out.println(myLat);
                 myLong = splitter[1].substring(0, 8);
-                System.out.println(myLong);
                 weather(myLat, myLong);
             }
 
@@ -125,8 +124,10 @@ public class MainActivity extends AppCompatActivity {
             myPlaceID = myPlace.getId().toString();
             intent.putExtra(LatLong, myLatLong);
             intent.putExtra(PlaceID, myPlaceID);
+        } else {
+            intent.putExtra(Latitude, myLat);
+            intent.putExtra(Longitude, myLong);
         }
-        System.out.println(intent);
         startActivity(intent);
     }
 
@@ -138,8 +139,12 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(String response) {
                 final String[] splitter = response.split("temp");
                 String temperature = splitter[1].substring(2, 5);
-                System.out.println(temperature);
-                weatherBox.setText("The temperature at your chosen location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C");
+                if (myPlace != null) {
+                    weatherBox.setText("The temperature at your chosen location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C");
+                } else {
+                    weatherBox.setText("The temperature at your current location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C");
+                }
+
             }
         };
         Response.ErrorListener mErrorListener = new Response.ErrorListener() {
