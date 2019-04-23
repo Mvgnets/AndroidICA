@@ -71,4 +71,11 @@
         app:layout_constraintRight_toRightOf="parent"
         tools:layout_editor_absoluteY="151dp" />
 
+    <ListView
+        android:id="@+id/placesListView"
+        android:layout_width="263dp"
+        android:layout_height="260dp"
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="243dp" />
+
 </android.support.constraint.ConstraintLayout>

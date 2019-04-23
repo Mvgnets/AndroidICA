@@ -4,7 +4,9 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
+import android.provider.BaseColumns;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -60,7 +62,8 @@ public class MainActivity extends AppCompatActivity {
 
     String myLat = "1";
     String myLong = "1";
-    String placeName;
+
+    DatabaseHelper myDB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         intent = new Intent(this, MapsActivity.class);
+        myDB = new DatabaseHelper(this);
     }
 
     public void currentLocation(View view) {
@@ -119,7 +123,9 @@ public class MainActivity extends AppCompatActivity {
     public void sendMessage(View view) {
         String myLatLong;
         String myPlaceID;
+        String[] splitter = myPlace.getLatLng().toString().split(",");
         if (myPlace != null) {
+            myDB.insertData(myPlace.getName(), splitter[0], splitter[1]);
             myLatLong = myPlace.getLatLng().toString();
             myPlaceID = myPlace.getId().toString();
             intent.putExtra(LatLong, myLatLong);
@@ -153,8 +159,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, error.getMessage());
             }
         };
-        //Use the volley library to fetch a list of the horse images
-        //
+
         RequestQueue queue = Volley.newRequestQueue(this);
 
         StringRequest weatherListing = new StringRequest(
@@ -172,5 +177,6 @@ public class MainActivity extends AppCompatActivity {
         };
         queue.add(weatherListing);
     }
+
 }
 
