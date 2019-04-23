@@ -2,6 +2,7 @@ package com.example.n3023685.gpspractice;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -42,4 +43,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         long result = db.insert(TABLE_NAME, null, contentValues);
         return result != -1;
     }
+
+    public Cursor getAllData() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor res = db.rawQuery(" select * from " + TABLE_NAME, null);
+        return res;
+    }
+
+    public Cursor getRow() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor res = db.rawQuery(" SELECT * FROM " + TABLE_NAME + " WHERE ID = 1", null);
+        //Cursor res = db.rawQuery(query, new String[], null);
+        return res;
+    }
+
 }

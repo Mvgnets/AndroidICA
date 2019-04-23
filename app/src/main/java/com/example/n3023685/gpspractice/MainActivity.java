@@ -1,9 +1,11 @@
 package com.example.n3023685.gpspractice;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.provider.BaseColumns;
@@ -13,8 +15,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
@@ -65,6 +69,20 @@ public class MainActivity extends AppCompatActivity {
 
     DatabaseHelper myDB;
 
+    String[] nameArray = {"Octopus", "Pig", "Sheep", "Rabbit", "Snake", "Spider"};
+
+    String[] infoArray = {
+            "8 tentacled monster",
+            "Delicious in rolls",
+            "Great for jumpers",
+            "Nice in a stew",
+            "Great for shoes",
+            "Scary."
+    };
+
+    ListView listView;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Places.initialize(getApplicationContext(), "AIzaSyDFFv6OVh2f3f4u2KUnaIGheJObLhlHkVQ");
@@ -113,11 +131,35 @@ public class MainActivity extends AppCompatActivity {
         });
         intent = new Intent(this, MapsActivity.class);
         myDB = new DatabaseHelper(this);
+        /*
+        for (int i = 0; i < myDB.getAllData().getCount(); i++){
+            Cursor res = myDB.getRow(i);
+            System.out.println(res.getString(1));
+            nameArray[i] = "Name : " + res.getString(1);
+            infoArray[i] = "Latitude : " + res.getString(2) + "Longitude : " + res.getString(3);
+        }
+        */
+        CustomListAdapter whatever = new CustomListAdapter(this, nameArray, infoArray);
+
+        listView = findViewById(R.id.placesListView);
+        listView.setAdapter(whatever);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position,
+                                    long id) {
+                int index = position + 1;
+                showMessage("data", viewRow(index).toString());
+
+            }
+        });
+
     }
 
     public void currentLocation(View view) {
         intent.putExtra(Latitude, myLat);
         intent.putExtra(Longitude, myLong);
+
     }
 
     public void sendMessage(View view) {
@@ -176,6 +218,37 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         queue.add(weatherListing);
+    }
+
+    public StringBuffer viewAll() {
+        Cursor res = myDB.getAllData();
+        StringBuffer buffer = new StringBuffer();
+        while (res.moveToNext()) {
+            buffer.append("ID : " + res.getString(0) + "\n");
+            buffer.append("PlaceName : " + res.getString(1) + "\n");
+            buffer.append("Latitude : " + res.getString(2) + "\n");
+            buffer.append("Longitude : " + res.getString(3) + "\n");
+        }
+        return buffer;
+    }
+
+    public StringBuffer viewRow(int i) {
+        Cursor res = myDB.getRow();
+        System.out.println(res.getString(0));
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("ID : " + res.getString(0) + "\n");
+        buffer.append("PlaceName : " + res.getString(1) + "\n");
+        buffer.append("Latitude : " + res.getString(2) + "\n");
+        buffer.append("Longitude : " + res.getString(3) + "\n");
+        return buffer;
+    }
+
+    public void showMessage(String title, String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(true);
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.show();
     }
 
 }
