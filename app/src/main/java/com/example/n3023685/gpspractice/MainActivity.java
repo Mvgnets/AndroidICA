@@ -61,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationClient;
     Intent intent;
     TextView weatherBox;
+    TextView locationMain;
+    TextView locationSub;
     public static final String BASE_URL = "api.openweathermap.org/data/2.5/weather?";
     public static final String NOTIFICATION_CHANNEL_ID = "Weather obtained";
 
@@ -109,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
                 // TODO: Get info about the selected place.
                 Log.i(TAG, "Place: " + place.getName() + ", " + place.getId());
                 myPlace = place;
+                placeLocation(place);
                 String[] splitter = myPlace.getLatLng().toString().split(",");
                 myLat = splitter[0].substring(10);
                 myLong = splitter[1].substring(0, 8);
@@ -127,7 +130,6 @@ public class MainActivity extends AppCompatActivity {
         String[] infoArray = new String[myDB.getAllData().getCount()];
         for (int i = 0; i < myDB.getAllData().getCount(); i++){
             String[] splitter = viewRow(i).toString().split(",");
-            System.out.println(splitter[0]);
             nameArray[i] = splitter[0];
             infoArray[i] = splitter[1];
         }
@@ -141,23 +143,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position,
                                     long id) {
-                showMessage("data", viewRow(position).toString());
-
+                sqlLocation(position);
             }
         });
-    }
-
-    public void currentLocation(View view) {
-        intent.putExtra(Latitude, myLat);
-        intent.putExtra(Longitude, myLong);
-
     }
 
     public void sendMessage(View view) {
         String myLatLong;
         String myPlaceID;
-        String[] splitter = myPlace.getLatLng().toString().split(",");
         if (myPlace != null) {
+            String[] splitter = myPlace.getLatLng().toString().split(",");
             myDB.insertData(myPlace.getName(), splitter[0], splitter[1]);
             myLatLong = myPlace.getLatLng().toString();
             myPlaceID = myPlace.getId().toString();
@@ -228,18 +223,28 @@ public class MainActivity extends AppCompatActivity {
         Cursor res = myDB.getRow(row);
         StringBuffer buffer = new StringBuffer();
         while (res.moveToNext()) {
-            buffer.append("Name : " + res.getString(1) + ",Latitude : " + res.getString(2) + " Longitude : " + res.getString(3));
+            buffer.append("Name : " + res.getString(1) + ",Latitude : " + res.getString(2).substring(10, 17) + " Longitude : " + res.getString(3).substring(0, 7));
         }
         return buffer;
     }
 
-    public void showMessage(String title, String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setCancelable(true);
-        builder.setTitle(title);
-        builder.setMessage(message);
-        builder.show();
+    public void placeLocation(Place place) {
+        locationMain = findViewById(R.id.locationMain);
+        locationSub = findViewById(R.id.locationSub);
+        locationMain.setText(place.getName().toString());
+        locationSub.setText(place.getLatLng().toString());
     }
 
+    public void sqlLocation(int i) {
+        locationMain = findViewById(R.id.locationMain);
+        locationSub = findViewById(R.id.locationSub);
+        String[] splitter = viewRow(i).toString().split(",");
+        String sqlLat = splitter[1].substring(10, 18);
+        String sqlLong = splitter[1].substring(31);
+        locationMain.setText(splitter[0]);
+        locationSub.setText(splitter[1]);
+        myLat = sqlLat;
+        myLong = sqlLong;
+    }
 }
 
