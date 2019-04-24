@@ -50,9 +50,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return res;
     }
 
-    public Cursor getRow() {
+    public Cursor getRow(int i) {
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery(" SELECT * FROM " + TABLE_NAME + " WHERE ID = 1", null);
+        Cursor res = db.rawQuery(" select * from placesTable where ID = " + i, null);
         //Cursor res = db.rawQuery(query, new String[], null);
         return res;
     }

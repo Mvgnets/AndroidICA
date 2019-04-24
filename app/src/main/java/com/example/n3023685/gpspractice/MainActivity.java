@@ -68,17 +68,9 @@ public class MainActivity extends AppCompatActivity {
     String myLong = "1";
 
     DatabaseHelper myDB;
+    //String[] nameArray = new String[myDB.getAllData().getCount()];
 
-    String[] nameArray = {"Octopus", "Pig", "Sheep", "Rabbit", "Snake", "Spider"};
-
-    String[] infoArray = {
-            "8 tentacled monster",
-            "Delicious in rolls",
-            "Great for jumpers",
-            "Nice in a stew",
-            "Great for shoes",
-            "Scary."
-    };
+    //String[] infoArray = new String[myDB.getAllData().getCount()];;
 
     ListView listView;
 
@@ -131,29 +123,28 @@ public class MainActivity extends AppCompatActivity {
         });
         intent = new Intent(this, MapsActivity.class);
         myDB = new DatabaseHelper(this);
-        /*
+        String[] nameArray = new String[myDB.getAllData().getCount()];
+        String[] infoArray = new String[myDB.getAllData().getCount()];
         for (int i = 0; i < myDB.getAllData().getCount(); i++){
-            Cursor res = myDB.getRow(i);
-            System.out.println(res.getString(1));
-            nameArray[i] = "Name : " + res.getString(1);
-            infoArray[i] = "Latitude : " + res.getString(2) + "Longitude : " + res.getString(3);
+            String[] splitter = viewRow(i).toString().split(",");
+            System.out.println(splitter[0]);
+            nameArray[i] = splitter[0];
+            infoArray[i] = splitter[1];
         }
-        */
-        CustomListAdapter whatever = new CustomListAdapter(this, nameArray, infoArray);
+
+        CustomListAdapter myAdapter = new CustomListAdapter(this, nameArray, infoArray);
 
         listView = findViewById(R.id.placesListView);
-        listView.setAdapter(whatever);
+        listView.setAdapter(myAdapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position,
                                     long id) {
-                int index = position + 1;
-                showMessage("data", viewRow(index).toString());
+                showMessage("data", viewRow(position).toString());
 
             }
         });
-
     }
 
     public void currentLocation(View view) {
@@ -233,13 +224,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public StringBuffer viewRow(int i) {
-        Cursor res = myDB.getRow();
-        System.out.println(res.getString(0));
+        int row = i + 1;
+        Cursor res = myDB.getRow(row);
         StringBuffer buffer = new StringBuffer();
-        buffer.append("ID : " + res.getString(0) + "\n");
-        buffer.append("PlaceName : " + res.getString(1) + "\n");
-        buffer.append("Latitude : " + res.getString(2) + "\n");
-        buffer.append("Longitude : " + res.getString(3) + "\n");
+        while (res.moveToNext()) {
+            buffer.append("Name : " + res.getString(1) + ",Latitude : " + res.getString(2) + " Longitude : " + res.getString(3));
+        }
         return buffer;
     }
 
