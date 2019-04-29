@@ -4,23 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <RelativeLayout
         android:id="@+id/mapFrame"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0">
-
-        <Button
-            android:id="@+id/clearMarkers"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="clearMarkers"
-            android:text="Clear Mark" />
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
         <fragment
             android:id="@+id/map"
@@ -31,38 +18,55 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:context="com.example.n3023685.gpspractice.MapsActivity" />
-    </FrameLayout>
 
-    <FrameLayout
-        android:id="@+id/photoFrame"
-        android:layout_width="wrap_content"
-        android:layout_height="135dp"
-        android:layout_marginTop="8dp"
-        android:orientation="vertical"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/mapFrame">
+        <Button
+            android:id="@+id/clearMarkers"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="clearMarkers"
+            android:text="Clear" />
+
+        <Button
+            android:id="@+id/currLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_weight="1"
+            android:onClick="showLocationBtn"
+            android:text="Show current location"
+            android:textAlignment="viewStart"
+            app:layout_constraintRight_toRightOf="parent"
+            tools:layout_editor_absoluteY="0dp" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/photoLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <ImageView
             android:id="@+id/photoView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
             android:layout_gravity="center_vertical"
+            android:layout_marginTop="491dp"
+            android:adjustViewBounds="false"
+            android:cropToPadding="false"
+            android:scaleType="fitXY"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/map"
-            app:layout_constraintVertical_bias="1.0" />
-
-    </FrameLayout>
-
-    <LinearLayout
-        android:id="@+id/imageScroll"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"></LinearLayout>
+            app:layout_constraintVertical_bias="0.961"
+            tools:layout_editor_absoluteX="8dp" />
+    </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>
