@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.provider.BaseColumns;
 import android.support.v4.app.ActivityCompat;
@@ -20,6 +22,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -43,10 +46,12 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
@@ -70,10 +75,6 @@ public class MainActivity extends AppCompatActivity {
     String myLong = "1";
 
     DatabaseHelper myDB;
-    //String[] nameArray = new String[myDB.getAllData().getCount()];
-
-    //String[] infoArray = new String[myDB.getAllData().getCount()];;
-
     ListView listView;
 
 
@@ -125,25 +126,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         intent = new Intent(this, MapsActivity.class);
-        myDB = new DatabaseHelper(this);
-        String[] nameArray = new String[myDB.getAllData().getCount()];
-        String[] infoArray = new String[myDB.getAllData().getCount()];
-        for (int i = 0; i < myDB.getAllData().getCount(); i++){
-            String[] splitter = viewRow(i).toString().split(",");
-            nameArray[i] = splitter[0];
-            infoArray[i] = splitter[1];
-        }
-
-        CustomListAdapter myAdapter = new CustomListAdapter(this, nameArray, infoArray);
-
-        listView = findViewById(R.id.placesListView);
-        listView.setAdapter(myAdapter);
-
+        arrayBuilder();
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position,
                                     long id) {
                 sqlLocation(position);
+            }
+        });
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                delRow(position);
+                return true;
             }
         });
     }
@@ -171,12 +166,14 @@ public class MainActivity extends AppCompatActivity {
         Response.Listener<String> mResponseHandler = new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                final String[] splitter = response.split("temp");
-                String temperature = splitter[1].substring(2, 5);
+                final String[] tempSplitter = response.split("temp");
+                String temperature = tempSplitter[1].substring(2, 5);
+                String weather = weatherDesc(response);
+
                 if (myPlace != null) {
-                    weatherBox.setText("The temperature at your chosen location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C");
+                    weatherBox.setText("The weather at your chosen location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C with " + weather);
                 } else {
-                    weatherBox.setText("The temperature at your current location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C");
+                    weatherBox.setText("The weather at your current location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C with " + weather);
                 }
 
             }
@@ -246,5 +243,33 @@ public class MainActivity extends AppCompatActivity {
         myLat = sqlLat;
         myLong = sqlLong;
     }
+
+    public void delRow(int i) {
+        myDB.delRow(i);
+        arrayBuilder();
+    }
+
+    public void arrayBuilder() {
+        myDB = new DatabaseHelper(this);
+        String[] nameArray = new String[myDB.getAllData().getCount()];
+        String[] infoArray = new String[myDB.getAllData().getCount()];
+        for (int i = 0; i < myDB.getAllData().getCount(); i++) {
+            String[] splitter = viewRow(i).toString().split(",");
+            nameArray[i] = splitter[0];
+            infoArray[i] = splitter[1];
+        }
+        CustomListAdapter myAdapter = new CustomListAdapter(this, nameArray, infoArray);
+        listView = findViewById(R.id.placesListView);
+        listView.setAdapter(myAdapter);
+    }
+
+    public String weatherDesc(String input) {
+        final String[] weathSplitter = input.split("description");
+        String weather = weathSplitter[1].substring(3);
+        String[] secondSplit = weather.split(",");
+        return secondSplit[0].substring(0, secondSplit[0].length() - 1);
+    }
+
+
 }
 
