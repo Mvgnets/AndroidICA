@@ -66,10 +66,12 @@ public class MainActivity extends AppCompatActivity {
     public static final String PlaceID = "com.example.n3023685.gpspractice.PlaceID";
     public static final String Latitude = "com.example.n3023685.gpspractice.Latitude";
     public static final String Longitude = "com.example.n3023685.gpspractice.Longitude";
+    public static final String ERROR_MESSAGE = "com.example.gpspractice.MESSAGE";
     private static final String TAG = "MainActivity";
     Place myPlace;
     private FusedLocationProviderClient fusedLocationClient;
     Intent intent;
+    Intent errorIntent;
     TextView weatherBox;
     TextView locationMain;
     TextView locationSub;
@@ -88,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
 
     String weather;
     String temperature;
+
+    int rowNum;
 
     private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
 
@@ -111,8 +115,12 @@ public class MainActivity extends AppCompatActivity {
                             myLong = Double.toString(location.getLongitude());
                             weather();
                             address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
+                        } else {
+                            errorIntent.putExtra(ERROR_MESSAGE, "An error occurred");
+                            startActivity(errorIntent);
                         }
                     }
+
                 });
         // Initialize the AutocompleteSupportFragment.
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
@@ -138,6 +146,8 @@ public class MainActivity extends AppCompatActivity {
             public void onError(Status status) {
                 // TODO: Handle the error.
                 Log.i(TAG, "An error occurred: " + status);
+                errorIntent.putExtra(ERROR_MESSAGE, "An error occurred: " + status);
+                startActivity(errorIntent);
             }
         });
         intent = new Intent(this, MapsActivity.class);
@@ -152,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                delRow(position);
+                delRow(Integer.toString(position), position);
                 return true;
             }
         });
@@ -161,9 +171,10 @@ public class MainActivity extends AppCompatActivity {
     public void sendMessage(View view) {
         String myLatLong;
         String myPlaceID;
+        rowNum = myDB.getAllData().getCount() - 1;
         if (myPlace != null) {
             String[] splitter = myPlace.getLatLng().toString().split(",");
-            myDB.insertData(myPlace.getName(), splitter[0], splitter[1]);
+            myDB.insertData(rowNum + 1, myPlace.getName(), splitter[0], splitter[1]);
             myLatLong = myPlace.getLatLng().toString();
             myPlaceID = myPlace.getId().toString();
             intent.putExtra(LatLong, myLatLong);
@@ -198,6 +209,9 @@ public class MainActivity extends AppCompatActivity {
         Response.ErrorListener mErrorListener = new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                Log.i(TAG, "An error occurred: " + error);
+                errorIntent.putExtra(ERROR_MESSAGE, "An error occurred: " + error);
+                startActivity(errorIntent);
             }
         };
 
@@ -225,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
         Cursor res = myDB.getRow(row);
         StringBuffer buffer = new StringBuffer();
         while (res.moveToNext()) {
-            buffer.append("Name : " + res.getString(1) + ",Latitude : " + res.getString(2).substring(10, 17) + " Longitude : " + res.getString(3).substring(0, 7));
+            buffer.append("Name : " + res.getString(2) + ",Latitude : " + res.getString(3).substring(10, 17) + " Longitude : " + res.getString(4).substring(0, 7));
         }
         return buffer;
     }
@@ -251,15 +265,15 @@ public class MainActivity extends AppCompatActivity {
         weather();
     }
 
-    public void delRow(int i) {
-        myDB.delRow(i);
+    public void delRow(String id, int row) {
+        //myDB.delRow(id);
 
         List<String> nameList = new ArrayList<String>(Arrays.asList(nameArray));
-        nameList.remove(i);
+        nameList.remove(row);
         nameArray = nameList.toArray(new String[0]);
 
         List<String> infoList = new ArrayList<String>(Arrays.asList(infoArray));
-        infoList.remove(i);
+        infoList.remove(row);
         infoArray = infoList.toArray(new String[0]);
         CustomListAdapter myAdapter = new CustomListAdapter(this, nameArray, infoArray);
         listView = findViewById(R.id.placesListView);
@@ -270,11 +284,24 @@ public class MainActivity extends AppCompatActivity {
         myDB = new DatabaseHelper(this);
         nameArray = new String[myDB.getAllData().getCount()];
         infoArray = new String[myDB.getAllData().getCount()];
-        for (int i = 0; i < myDB.getAllData().getCount(); i++) {
-            String[] splitter = viewRow(i).toString().split(",");
-            nameArray[i] = splitter[0];
-            infoArray[i] = splitter[1];
+        int j = 0;
+        while (j < myDB.getAllData().getCount()) {
+            System.out.println(viewRow(j).toString());
+            String[] splitter = viewRow(j).toString().split(",");
+            nameArray[j] = splitter[0];
+            System.out.println(splitter[0]);
+            //infoArray[j] = splitter[1];
+            j++;
         }
+        /**
+         for (int i = 0; i < myDB.getAllData().getCount(); i++) {
+         System.out.println(i);
+         String[] splitter = viewRow(i).toString().split(",");
+         nameArray[i] = splitter[0];
+         System.out.println(splitter[0]);
+         infoArray[i] = splitter[1];
+         }
+         **/
         CustomListAdapter myAdapter = new CustomListAdapter(this, nameArray, infoArray);
         listView = findViewById(R.id.placesListView);
         listView.setAdapter(myAdapter);
@@ -305,6 +332,11 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return address;
+    }
+
+    public void clearHist(View view) {
+        myDB.onUpgrade(myDB.getWritableDatabase(), 1, 2);
+        arrayBuilder();
     }
 
 
