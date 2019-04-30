@@ -52,6 +52,7 @@ import com.google.android.libraries.places.widget.listener.PlaceSelectionListene
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -82,6 +83,12 @@ public class MainActivity extends AppCompatActivity {
     DatabaseHelper myDB;
     ListView listView;
 
+    String[] nameArray;
+    String[] infoArray;
+
+    String weather;
+    String temperature;
+
     private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
 
     @Override
@@ -102,9 +109,8 @@ public class MainActivity extends AppCompatActivity {
                         if (location != null) {
                             myLat = Double.toString(location.getLatitude());
                             myLong = Double.toString(location.getLongitude());
-                            weather(myLat, myLong);
+                            weather();
                             address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
-                            System.out.println(address);
                         }
                     }
                 });
@@ -124,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                 String[] splitter = myPlace.getLatLng().toString().split(",");
                 myLat = splitter[0].substring(10);
                 myLong = splitter[1].substring(0, 8);
-                weather(myLat, myLong);
+                weather();
                 address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
             }
 
@@ -169,9 +175,8 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void weather(String latitude, String longitude) {
+    public void weather() {
         weatherBox = findViewById(R.id.weatherBox);
-
         Response.Listener<String> mResponseHandler = new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -193,7 +198,6 @@ public class MainActivity extends AppCompatActivity {
         Response.ErrorListener mErrorListener = new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, error.getMessage());
             }
         };
 
@@ -213,6 +217,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         queue.add(weatherListing);
+
     }
 
     public StringBuffer viewRow(int i) {
@@ -236,23 +241,35 @@ public class MainActivity extends AppCompatActivity {
         locationMain = findViewById(R.id.locationMain);
         locationSub = findViewById(R.id.locationSub);
         String[] splitter = viewRow(i).toString().split(",");
-        String sqlLat = splitter[1].substring(10, 18);
+        String sqlLat = splitter[1].substring(11, 18);
         String sqlLong = splitter[1].substring(31);
         locationMain.setText(splitter[0]);
         locationSub.setText(splitter[1]);
         myLat = sqlLat;
         myLong = sqlLong;
+        address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
+        weather();
     }
 
     public void delRow(int i) {
         myDB.delRow(i);
-        arrayBuilder();
+
+        List<String> nameList = new ArrayList<String>(Arrays.asList(nameArray));
+        nameList.remove(i);
+        nameArray = nameList.toArray(new String[0]);
+
+        List<String> infoList = new ArrayList<String>(Arrays.asList(infoArray));
+        infoList.remove(i);
+        infoArray = infoList.toArray(new String[0]);
+        CustomListAdapter myAdapter = new CustomListAdapter(this, nameArray, infoArray);
+        listView = findViewById(R.id.placesListView);
+        listView.setAdapter(myAdapter);
     }
 
     public void arrayBuilder() {
         myDB = new DatabaseHelper(this);
-        String[] nameArray = new String[myDB.getAllData().getCount()];
-        String[] infoArray = new String[myDB.getAllData().getCount()];
+        nameArray = new String[myDB.getAllData().getCount()];
+        infoArray = new String[myDB.getAllData().getCount()];
         for (int i = 0; i < myDB.getAllData().getCount(); i++) {
             String[] splitter = viewRow(i).toString().split(",");
             nameArray[i] = splitter[0];
