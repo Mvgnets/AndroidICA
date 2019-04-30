@@ -10,6 +10,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.provider.BaseColumns;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -35,6 +37,8 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
@@ -48,6 +52,7 @@ import com.google.android.libraries.places.widget.listener.PlaceSelectionListene
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -61,10 +66,12 @@ public class MainActivity extends AppCompatActivity {
     public static final String PlaceID = "com.example.n3023685.gpspractice.PlaceID";
     public static final String Latitude = "com.example.n3023685.gpspractice.Latitude";
     public static final String Longitude = "com.example.n3023685.gpspractice.Longitude";
+    public static final String ERROR_MESSAGE = "com.example.gpspractice.MESSAGE";
     private static final String TAG = "MainActivity";
     Place myPlace;
     private FusedLocationProviderClient fusedLocationClient;
     Intent intent;
+    Intent errorIntent;
     TextView weatherBox;
     TextView locationMain;
     TextView locationSub;
@@ -73,10 +80,20 @@ public class MainActivity extends AppCompatActivity {
 
     String myLat = "1";
     String myLong = "1";
+    String address = "";
 
     DatabaseHelper myDB;
     ListView listView;
 
+    String[] nameArray;
+    String[] infoArray;
+
+    String weather;
+    String temperature;
+
+    int rowNum;
+
+    private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,9 +113,14 @@ public class MainActivity extends AppCompatActivity {
                         if (location != null) {
                             myLat = Double.toString(location.getLatitude());
                             myLong = Double.toString(location.getLongitude());
-                            weather(myLat, myLong);
+                            weather();
+                            address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
+                        } else {
+                            errorIntent.putExtra(ERROR_MESSAGE, "An error occurred");
+                            startActivity(errorIntent);
                         }
                     }
+
                 });
         // Initialize the AutocompleteSupportFragment.
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
@@ -116,13 +138,16 @@ public class MainActivity extends AppCompatActivity {
                 String[] splitter = myPlace.getLatLng().toString().split(",");
                 myLat = splitter[0].substring(10);
                 myLong = splitter[1].substring(0, 8);
-                weather(myLat, myLong);
+                weather();
+                address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
             }
 
             @Override
             public void onError(Status status) {
                 // TODO: Handle the error.
                 Log.i(TAG, "An error occurred: " + status);
+                errorIntent.putExtra(ERROR_MESSAGE, "An error occurred: " + status);
+                startActivity(errorIntent);
             }
         });
         intent = new Intent(this, MapsActivity.class);
@@ -137,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                delRow(position);
+                delRow(Integer.toString(position), position);
                 return true;
             }
         });
@@ -146,9 +171,10 @@ public class MainActivity extends AppCompatActivity {
     public void sendMessage(View view) {
         String myLatLong;
         String myPlaceID;
+        rowNum = myDB.getAllData().getCount() - 1;
         if (myPlace != null) {
             String[] splitter = myPlace.getLatLng().toString().split(",");
-            myDB.insertData(myPlace.getName(), splitter[0], splitter[1]);
+            myDB.insertData(rowNum + 1, myPlace.getName(), splitter[0], splitter[1]);
             myLatLong = myPlace.getLatLng().toString();
             myPlaceID = myPlace.getId().toString();
             intent.putExtra(LatLong, myLatLong);
@@ -160,28 +186,32 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void weather(String latitude, String longitude) {
+    public void weather() {
         weatherBox = findViewById(R.id.weatherBox);
-
         Response.Listener<String> mResponseHandler = new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 final String[] tempSplitter = response.split("temp");
                 String temperature = tempSplitter[1].substring(2, 5);
                 String weather = weatherDesc(response);
-
-                if (myPlace != null) {
-                    weatherBox.setText("The weather at your chosen location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C with " + weather);
-                } else {
-                    weatherBox.setText("The weather at your current location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C with " + weather);
+                if (!address.isEmpty()){
+                    weatherBox.setText("The temperature in " + address + " is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C with " + weather);
                 }
-
+                else{
+                    if (myPlace != null) {
+                        weatherBox.setText("The temperature at your chosen location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C with " + weather);
+                    } else {
+                        weatherBox.setText("The temperature at your current location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C with " + weather);
+                    }
+                }
             }
         };
         Response.ErrorListener mErrorListener = new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, error.getMessage());
+                Log.i(TAG, "An error occurred: " + error);
+                errorIntent.putExtra(ERROR_MESSAGE, "An error occurred: " + error);
+                startActivity(errorIntent);
             }
         };
 
@@ -201,18 +231,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         queue.add(weatherListing);
-    }
 
-    public StringBuffer viewAll() {
-        Cursor res = myDB.getAllData();
-        StringBuffer buffer = new StringBuffer();
-        while (res.moveToNext()) {
-            buffer.append("ID : " + res.getString(0) + "\n");
-            buffer.append("PlaceName : " + res.getString(1) + "\n");
-            buffer.append("Latitude : " + res.getString(2) + "\n");
-            buffer.append("Longitude : " + res.getString(3) + "\n");
-        }
-        return buffer;
     }
 
     public StringBuffer viewRow(int i) {
@@ -220,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
         Cursor res = myDB.getRow(row);
         StringBuffer buffer = new StringBuffer();
         while (res.moveToNext()) {
-            buffer.append("Name : " + res.getString(1) + ",Latitude : " + res.getString(2).substring(10, 17) + " Longitude : " + res.getString(3).substring(0, 7));
+            buffer.append("Name : " + res.getString(2) + ",Latitude : " + res.getString(3).substring(10, 17) + " Longitude : " + res.getString(4).substring(0, 7));
         }
         return buffer;
     }
@@ -236,28 +255,53 @@ public class MainActivity extends AppCompatActivity {
         locationMain = findViewById(R.id.locationMain);
         locationSub = findViewById(R.id.locationSub);
         String[] splitter = viewRow(i).toString().split(",");
-        String sqlLat = splitter[1].substring(10, 18);
+        String sqlLat = splitter[1].substring(11, 18);
         String sqlLong = splitter[1].substring(31);
         locationMain.setText(splitter[0]);
         locationSub.setText(splitter[1]);
         myLat = sqlLat;
         myLong = sqlLong;
+        address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
+        weather();
     }
 
-    public void delRow(int i) {
-        myDB.delRow(i);
-        arrayBuilder();
+    public void delRow(String id, int row) {
+        //myDB.delRow(id);
+
+        List<String> nameList = new ArrayList<String>(Arrays.asList(nameArray));
+        nameList.remove(row);
+        nameArray = nameList.toArray(new String[0]);
+
+        List<String> infoList = new ArrayList<String>(Arrays.asList(infoArray));
+        infoList.remove(row);
+        infoArray = infoList.toArray(new String[0]);
+        CustomListAdapter myAdapter = new CustomListAdapter(this, nameArray, infoArray);
+        listView = findViewById(R.id.placesListView);
+        listView.setAdapter(myAdapter);
     }
 
     public void arrayBuilder() {
         myDB = new DatabaseHelper(this);
-        String[] nameArray = new String[myDB.getAllData().getCount()];
-        String[] infoArray = new String[myDB.getAllData().getCount()];
-        for (int i = 0; i < myDB.getAllData().getCount(); i++) {
-            String[] splitter = viewRow(i).toString().split(",");
-            nameArray[i] = splitter[0];
-            infoArray[i] = splitter[1];
+        nameArray = new String[myDB.getAllData().getCount()];
+        infoArray = new String[myDB.getAllData().getCount()];
+        int j = 0;
+        while (j < myDB.getAllData().getCount()) {
+            System.out.println(viewRow(j).toString());
+            String[] splitter = viewRow(j).toString().split(",");
+            nameArray[j] = splitter[0];
+            System.out.println(splitter[0]);
+            //infoArray[j] = splitter[1];
+            j++;
         }
+        /**
+         for (int i = 0; i < myDB.getAllData().getCount(); i++) {
+         System.out.println(i);
+         String[] splitter = viewRow(i).toString().split(",");
+         nameArray[i] = splitter[0];
+         System.out.println(splitter[0]);
+         infoArray[i] = splitter[1];
+         }
+         **/
         CustomListAdapter myAdapter = new CustomListAdapter(this, nameArray, infoArray);
         listView = findViewById(R.id.placesListView);
         listView.setAdapter(myAdapter);
@@ -268,6 +312,31 @@ public class MainActivity extends AppCompatActivity {
         String weather = weathSplitter[1].substring(3);
         String[] secondSplit = weather.split(",");
         return secondSplit[0].substring(0, secondSplit[0].length() - 1);
+    }
+
+    private String getAddressFromLocation(double latitude, double longitude) {
+
+        Geocoder geocoder = new Geocoder(this, Locale.ENGLISH);
+        String address = "";
+
+        try {
+            List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+            if (addresses.size() > 0) {
+                Address fetchedAddress = addresses.get(0);
+                address = fetchedAddress.getSubAdminArea();
+            } else {
+                System.out.println("Searching Current Address");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return address;
+    }
+
+    public void clearHist(View view) {
+        myDB.onUpgrade(myDB.getWritableDatabase(), 1, 2);
+        arrayBuilder();
     }
 
 
