@@ -88,9 +88,6 @@ public class MainActivity extends AppCompatActivity {
     String[] nameArray;
     String[] infoArray;
 
-    String weather;
-    String temperature;
-
     int rowNum;
 
     private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
@@ -120,8 +117,8 @@ public class MainActivity extends AppCompatActivity {
                             startActivity(errorIntent);
                         }
                     }
-
                 });
+
         // Initialize the AutocompleteSupportFragment.
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
@@ -157,13 +154,6 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position,
                                     long id) {
                 sqlLocation(position);
-            }
-        });
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                delRow(Integer.toString(position), position);
-                return true;
             }
         });
     }
@@ -231,7 +221,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         queue.add(weatherListing);
-
     }
 
     public StringBuffer viewRow(int i) {
@@ -245,39 +234,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void placeLocation(Place place) {
-        locationMain = findViewById(R.id.locationMain);
-        locationSub = findViewById(R.id.locationSub);
-        locationMain.setText(place.getName().toString());
-        locationSub.setText(place.getLatLng().toString());
+        ReceiverFragment locationFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.locationFrag);
+        ReceiverFragment infoFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.infoFrag);
+        if (place != null) {
+            locationFrag.updateText(place.getName().toString());
+            infoFrag.updateText(place.getLatLng().toString());
+        }
     }
 
     public void sqlLocation(int i) {
-        locationMain = findViewById(R.id.locationMain);
-        locationSub = findViewById(R.id.locationSub);
+        ReceiverFragment locationFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.locationFrag);
+        ReceiverFragment infoFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.infoFrag);
         String[] splitter = viewRow(i).toString().split(",");
         String sqlLat = splitter[1].substring(11, 18);
         String sqlLong = splitter[1].substring(31);
-        locationMain.setText(splitter[0]);
-        locationSub.setText(splitter[1]);
+        locationFrag.updateText(splitter[0]);
+        infoFrag.updateText(splitter[1]);
         myLat = sqlLat;
         myLong = sqlLong;
         address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
         weather();
-    }
-
-    public void delRow(String id, int row) {
-        //myDB.delRow(id);
-
-        List<String> nameList = new ArrayList<String>(Arrays.asList(nameArray));
-        nameList.remove(row);
-        nameArray = nameList.toArray(new String[0]);
-
-        List<String> infoList = new ArrayList<String>(Arrays.asList(infoArray));
-        infoList.remove(row);
-        infoArray = infoList.toArray(new String[0]);
-        CustomListAdapter myAdapter = new CustomListAdapter(this, nameArray, infoArray);
-        listView = findViewById(R.id.placesListView);
-        listView.setAdapter(myAdapter);
     }
 
     public void arrayBuilder() {
@@ -286,22 +262,10 @@ public class MainActivity extends AppCompatActivity {
         infoArray = new String[myDB.getAllData().getCount()];
         int j = 0;
         while (j < myDB.getAllData().getCount()) {
-            System.out.println(viewRow(j).toString());
             String[] splitter = viewRow(j).toString().split(",");
             nameArray[j] = splitter[0];
-            System.out.println(splitter[0]);
-            //infoArray[j] = splitter[1];
             j++;
         }
-        /**
-         for (int i = 0; i < myDB.getAllData().getCount(); i++) {
-         System.out.println(i);
-         String[] splitter = viewRow(i).toString().split(",");
-         nameArray[i] = splitter[0];
-         System.out.println(splitter[0]);
-         infoArray[i] = splitter[1];
-         }
-         **/
         CustomListAdapter myAdapter = new CustomListAdapter(this, nameArray, infoArray);
         listView = findViewById(R.id.placesListView);
         listView.setAdapter(myAdapter);
@@ -315,10 +279,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String getAddressFromLocation(double latitude, double longitude) {
-
         Geocoder geocoder = new Geocoder(this, Locale.ENGLISH);
         String address = "";
-
         try {
             List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
             if (addresses.size() > 0) {

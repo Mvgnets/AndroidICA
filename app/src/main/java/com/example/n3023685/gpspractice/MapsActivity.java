@@ -126,6 +126,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Bitmap bitmap = fetchPhotoResponse.getBitmap();
                 imageView.setImageBitmap(bitmap);
             });
+
         }).addOnFailureListener((exception) -> {
             if (exception instanceof ApiException) {
                 ApiException apiException = (ApiException) exception;
@@ -150,7 +151,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         params.width = screenWidth;
         mapLayout.setLayoutParams(params);
         imageView.setTop(screenHeight);
-
     }
 
     public void showLocation() {

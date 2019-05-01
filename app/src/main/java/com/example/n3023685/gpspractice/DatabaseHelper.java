@@ -58,17 +58,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return res;
     }
 
-    public Cursor dropTable() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery(" delete from  " + TABLE_NAME, null);
-        return res;
-    }
 
-    public Cursor vacuum() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery(" vacuum ", null);
-        return res;
-    }
 
 
 }
