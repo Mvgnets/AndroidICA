@@ -44,6 +44,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.model.PlaceLikelihood;
+import com.google.android.libraries.places.api.net.FetchPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
@@ -73,8 +74,6 @@ public class MainActivity extends AppCompatActivity {
     Intent intent;
     Intent errorIntent;
     TextView weatherBox;
-    TextView locationMain;
-    TextView locationSub;
     public static final String BASE_URL = "api.openweathermap.org/data/2.5/weather?";
     public static final String NOTIFICATION_CHANNEL_ID = "Weather obtained";
 
@@ -90,10 +89,13 @@ public class MainActivity extends AppCompatActivity {
 
     int rowNum;
 
+    TextReceiver mySMS;
+
     private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        mySMS = new TextReceiver();
         Places.initialize(getApplicationContext(), "AIzaSyDFFv6OVh2f3f4u2KUnaIGheJObLhlHkVQ");
         PlacesClient placesClient = Places.createClient(this);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -138,7 +140,6 @@ public class MainActivity extends AppCompatActivity {
                 weather();
                 address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
             }
-
             @Override
             public void onError(Status status) {
                 // TODO: Handle the error.
@@ -248,11 +249,12 @@ public class MainActivity extends AppCompatActivity {
         String[] splitter = viewRow(i).toString().split(",");
         String sqlLat = splitter[1].substring(11, 18);
         String sqlLong = splitter[1].substring(31);
+        String name = splitter[0].substring(7);
         locationFrag.updateText(splitter[0]);
         infoFrag.updateText(splitter[1]);
         myLat = sqlLat;
         myLong = sqlLong;
-        address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
+        address = getAddressFromLocation(Double.parseDouble(myLat), Double.parseDouble(myLong));
         weather();
     }
 
@@ -300,7 +302,6 @@ public class MainActivity extends AppCompatActivity {
         myDB.onUpgrade(myDB.getWritableDatabase(), 1, 2);
         arrayBuilder();
     }
-
 
 }
 
