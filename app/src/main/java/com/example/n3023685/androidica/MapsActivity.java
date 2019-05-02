@@ -69,7 +69,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private final OnFailureListener mFailureListener = new OnFailureListener() {
         @Override
         public void onFailure(@NonNull Exception e) {
-
         }
     };
 
@@ -84,7 +83,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onSuccess(FetchPhotoResponse fetchPhotoResponse) {
             mPlaceModels[mIndex].setBitmap(fetchPhotoResponse.getBitmap());
-
             loadedImageCount++;
         }
     }
@@ -156,7 +154,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onPoiClick(PointOfInterest poi) {
-
         DisplayMetrics displayMetrics = new DisplayMetrics();
         WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE); // the results will be higher than using the activity context object or the getWindowManager() shortcut
         wm.getDefaultDisplay().getMetrics(displayMetrics);
@@ -191,14 +188,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void showLocation() {
+        Intent intent = getIntent();
         newMarker = new LatLng(lattitude, longitude);
         mMap.addMarker(new MarkerOptions().position(newMarker).title("You are here"));
         float zoomLevel = 15.0f; //This goes up to 21
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newMarker, zoomLevel));
     }
 
+    public void currLocation() {
+        Intent intent = getIntent();
+        String currLat = intent.getStringExtra(MainActivity.Current_Latitude);
+        String currLong = intent.getStringExtra(MainActivity.Current_Longitude);
+        newMarker = new LatLng(Double.parseDouble(currLat), Double.parseDouble(currLong));
+        mMap.addMarker(new MarkerOptions().position(newMarker).title("You are here"));
+        float zoomLevel = 15.0f; //This goes up to 21
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newMarker, zoomLevel));
+    }
+
+
     public void showLocationBtn(View view) {
-        showLocation();
+        currLocation();
     }
 
     private void initPlacesClient() {
@@ -228,7 +237,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                         ", " +
                                         mPlace.getAddress();
                                 fetchPlacePhotos(placesClient);
-
                             }
                         }
                 )
@@ -278,10 +286,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Toast.LENGTH_LONG).show();
             clear();
         }
-
-
     }
-
 
     private void instigateAllImageLoadedCheck() {
 
@@ -298,6 +303,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mRecyclerView.setAdapter(mRecyclerViewAdapter);
         mRecyclerView.setVisibility(View.VISIBLE);
     }
-
 
 }

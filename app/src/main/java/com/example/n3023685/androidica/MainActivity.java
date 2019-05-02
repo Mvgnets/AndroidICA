@@ -1,13 +1,19 @@
 package com.example.n3023685.androidica;
 
 import android.Manifest;
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.OnLifecycleEvent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -46,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     public static final String PlaceID = "com.example.n3023685.gpspractice.PlaceID";
     public static final String Latitude = "com.example.n3023685.gpspractice.Latitude";
     public static final String Longitude = "com.example.n3023685.gpspractice.Longitude";
+    public static final String Current_Latitude = "com.example.n3023685.gpspractice.Current_Latitude";
+    public static final String Current_Longitude = "com.example.n3023685.gpspractice.Current_Longitude";
     public static final String ERROR_MESSAGE = "com.example.n3023685.gpspractice.MESSAGE";
     private static final String TAG = "MainActivity";
     Place myPlace;
@@ -59,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
 
     String myLat = "1";
     String myLong = "1";
+    String currLat = "1";
+    String currLong = "1";
     String address = "";
 
     DatabaseHelper myDB;
@@ -73,6 +83,9 @@ public class MainActivity extends AppCompatActivity {
 
     CustomListAdapter myAdapter;
 
+    int FINE_LOCATION_PERMISSION_CODE = 1;
+    int COURSE_LOCATION_PERMISSION_CODE = 2;
+
     String error = "Oops something went wrong, please restart the app and try again";
 
     private static final String SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
@@ -83,14 +96,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.RECEIVE_SMS, Manifest.permission.CALL_PHONE}, 1);
-            return; //ask for the permissions the app requires
-        }
-        weatherBox = findViewById(R.id.weatherBox);
-        weatherBox.setText("This app requires these permissions to function. Please check your permission settings and restart the app");
-        loader();
+        errorIntent = new Intent(this, ErrorActivity.class);
+        requestLocationPermission();
+
     }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    public void reload() {
+        requestLocationPermission();
+    }
+
+
 
     public void sendMessage(View view) {
         String myLatLong;
@@ -106,6 +122,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             intent.putExtra(Latitude, myLat);
             intent.putExtra(Longitude, myLong);
+            intent.putExtra(Current_Latitude, currLat);
+            intent.putExtra(Current_Longitude, currLong);
         }
         startActivity(intent);
     }
@@ -172,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
         ReceiverFragment infoFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.infoFrag);
         if (place != null) {
             locationFrag.updateText(place.getName().toString());
-            infoFrag.updateText(place.getLatLng().toString());
+            infoFrag.updateText(address);
         }
     }
 
@@ -181,13 +199,12 @@ public class MainActivity extends AppCompatActivity {
         ReceiverFragment infoFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.infoFrag);
         String[] splitter = viewRow(i).toString().split(",");
         String sqlLat = splitter[1].substring(11, 18);
-        String sqlLong = splitter[1].substring(31);
-        String name = splitter[0].substring(7);
-        locationFrag.updateText(splitter[0]);
-        infoFrag.updateText(splitter[1]);
+        String sqlLong = splitter[1].substring(31);;
         myLat = sqlLat;
         myLong = sqlLong;
         address = getAddressFromLocation(Double.parseDouble(myLat), Double.parseDouble(myLong));
+        locationFrag.updateText(splitter[0]);
+        infoFrag.updateText(address);
         weather();
     }
 
@@ -199,7 +216,11 @@ public class MainActivity extends AppCompatActivity {
         while (j < myDB.getAllData().getCount()) {
             String[] splitter = viewRow(j).toString().split(",");
             nameArray[j] = splitter[0];
-            infoArray[j] = splitter[1];
+            String sqlLat = splitter[1].substring(11, 18);
+            String sqlLong = splitter[1].substring(31);;
+            myLat = sqlLat;
+            myLong = sqlLong;
+            infoArray[j] = getAddressFromLocation(Double.parseDouble(myLat), Double.parseDouble(myLong));
             j++;
         }
         myAdapter = new CustomListAdapter(this, nameArray, infoArray);
@@ -222,8 +243,6 @@ public class MainActivity extends AppCompatActivity {
             if (addresses.size() > 0) {
                 Address fetchedAddress = addresses.get(0);
                 address = fetchedAddress.getSubAdminArea();
-            } else {
-                System.out.println("Searching Current Address");
             }
 
         } catch (IOException e) {
@@ -239,7 +258,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void loader(){
         intent = new Intent(this, MapsActivity.class);
-        errorIntent = new Intent(this, ErrorActivity.class);
         mySMS = new TextReceiver();
         Places.initialize(getApplicationContext(), "AIzaSyDFFv6OVh2f3f4u2KUnaIGheJObLhlHkVQ");
         PlacesClient placesClient = Places.createClient(this);
@@ -251,14 +269,14 @@ public class MainActivity extends AppCompatActivity {
                         if (location != null) {
                             myLat = Double.toString(location.getLatitude());
                             myLong = Double.toString(location.getLongitude());
-                            System.out.println("it's working");
+                            currLat = Double.toString(location.getLatitude());
+                            currLong = Double.toString(location.getLongitude());
                             weather();
                             address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
                         } else {
                             error = "Cannot find current location, please check your location settings and restart the app";
                             errorIntent.putExtra(ERROR_MESSAGE, error);
                             startActivity(errorIntent);
-                            System.out.println("it's doing something");
                         }
                     }
                 });
@@ -275,12 +293,12 @@ public class MainActivity extends AppCompatActivity {
                 // TODO: Get info about the selected place.
                 Log.i(TAG, "Place: " + place.getName() + ", " + place.getId());
                 myPlace = place;
-                placeLocation(place);
                 String[] splitter = myPlace.getLatLng().toString().split(",");
                 myLat = splitter[0].substring(10);
                 myLong = splitter[1].substring(0, 8);
                 weather();
                 address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
+                placeLocation(place);
             }
             @Override
             public void onError(Status status) {
@@ -299,6 +317,52 @@ public class MainActivity extends AppCompatActivity {
                 sqlLocation(position);
             }
         });
+    }
+
+    private void requestLocationPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Permission needed")
+                    .setMessage("This app requires location permissions to function properly")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_PERMISSION_CODE);
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, COURSE_LOCATION_PERMISSION_CODE);
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            error = "Permissions are required for this app, please check permissions and try again";
+                            errorIntent.putExtra(ERROR_MESSAGE, error);
+                            startActivity(errorIntent);
+                        }
+                    })
+                    .create().show();
+
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_PERMISSION_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == FINE_LOCATION_PERMISSION_CODE)  {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                loader();
+            } else {
+                error = "Permissions are required for this app, please check permissions and try again";
+                errorIntent.putExtra(ERROR_MESSAGE, error);
+                startActivity(errorIntent);
+            }
+        }
     }
 
 }

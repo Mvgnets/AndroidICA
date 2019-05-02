@@ -33,23 +33,6 @@
                 app:layout_constraintTop_toBottomOf="@+id/errorBox"
                 app:layout_constraintVertical_chainStyle="spread" />
 
-            <TextView
-                android:id="@+id/weatherBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:text="This app requires these permissions to function. Please check your permission settings and restart the app"
-                android:textAlignment="center"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toTopOf="@+id/locationMain"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/autocomplete_fragment" />
-
             <fragment
                 android:id="@+id/locationFrag"
                 android:name="com.example.n3023685.androidica.ReceiverFragment"
@@ -61,6 +44,22 @@
                 android:name="com.example.n3023685.androidica.ReceiverFragment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/weatherBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:textAlignment="center"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toTopOf="@+id/locationMain"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/autocomplete_fragment" />
 
             <TextView
                 android:id="@+id/textView"
