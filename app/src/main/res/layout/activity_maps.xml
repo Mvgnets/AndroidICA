@@ -35,7 +35,7 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:context="com.example.n3023685.gpspractice.MapsActivity" />
+            tools:context="com.example.n3023685.androidica.MapsActivity" />
 
         <Button
             android:id="@+id/clearMarkers"

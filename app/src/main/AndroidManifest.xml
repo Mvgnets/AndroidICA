@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.n3023685.gpspractice">
+    package="com.example.n3023685.androidica">
 
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
@@ -20,7 +20,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name="com.example.n3023685.androidica.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -40,12 +40,12 @@
             android:value="AIzaSyDFFv6OVh2f3f4u2KUnaIGheJObLhlHkVQ" />
 
         <activity
-            android:name=".MapsActivity"
+            android:name="com.example.n3023685.androidica.MapsActivity"
             android:label="@string/title_activity_maps" />
-        <activity android:name=".ErrorActivity" />
+        <activity android:name="com.example.n3023685.androidica.ErrorActivity" />
 
         <receiver
-            android:name=".TextReceiver"
+            android:name="com.example.n3023685.androidica.TextReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

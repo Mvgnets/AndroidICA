@@ -1,12 +1,10 @@
-package com.example.n3023685.gpspractice;
+package com.example.n3023685.androidica;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,12 +14,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.ApiException;
@@ -29,7 +23,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -180,6 +173,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void clearMarkers(View view) {
+        clear();
+    }
+
+    public void clear(){
         mMap.clear();
         RelativeLayout mapLayout = findViewById(R.id.mapFrame);
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -241,6 +238,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             public void onFailure(@NonNull Exception e) {
                                 if (e instanceof ApiException) {
                                     Log.e(TAG, e.getMessage());
+                                    System.out.println("an error occurred");
                                 }
                             }
                         }
@@ -249,34 +247,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void fetchPlacePhotos(final PlacesClient placesClient) {
         // Get the photo metadata.
-        if (mPlace.getPhotoMetadatas().isEmpty())
-            return;
+        if (mPlace.getPhotoMetadatas() != null) {
+            mPlaceModels = new PlaceModel[mPlace.getPhotoMetadatas().size()];
+            final int maxWidth = 300;
+            final int maxHeight = 300;
+            int placeImageCounter = 0;
 
-        mPlaceModels = new PlaceModel[mPlace.getPhotoMetadatas().size()];
+            for (PhotoMetadata photoMetadata : mPlace.getPhotoMetadatas()) {
 
-        final int maxWidth = 300;
-        final int maxHeight = 300;
+                mPlaceModels[placeImageCounter] = new PlaceModel(photoMetadata.getAttributions());
 
-        int placeImageCounter = 0;
+                final FetchPhotoRequest photoRequest = FetchPhotoRequest.builder(photoMetadata)
+                        .setMaxWidth(maxWidth) // Optional.
+                        .setMaxHeight(maxHeight) // Optional.
+                        .build();
 
-        for (PhotoMetadata photoMetadata : mPlace.getPhotoMetadatas()) {
+                placesClient
+                        .fetchPhoto(photoRequest)
+                        .addOnSuccessListener(new PhotoSuccessListener(placeImageCounter))
+                        .addOnFailureListener(mFailureListener);
 
-            mPlaceModels[placeImageCounter] = new PlaceModel(photoMetadata.getAttributions());
+                placeImageCounter++;
+            }
 
-            final FetchPhotoRequest photoRequest = FetchPhotoRequest.builder(photoMetadata)
-                    .setMaxWidth(maxWidth) // Optional.
-                    .setMaxHeight(maxHeight) // Optional.
-                    .build();
-
-            placesClient
-                    .fetchPhoto(photoRequest)
-                    .addOnSuccessListener(new PhotoSuccessListener(placeImageCounter))
-                    .addOnFailureListener(mFailureListener);
-
-            placeImageCounter++;
+            instigateAllImageLoadedCheck();
         }
 
-        instigateAllImageLoadedCheck();
+        else {
+            Toast.makeText(MapsActivity.this, "No images available",
+                    Toast.LENGTH_LONG).show();
+            clear();
+        }
+
+
     }
 
 

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/GPSPractice (copy).iml" filepath="$PROJECT_DIR$/GPSPractice (copy).iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/AndroidICA.iml" filepath="$PROJECT_DIR$/.idea/AndroidICA.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

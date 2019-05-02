@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.n3023685.gpspractice.MainActivity">
+    tools:context="com.example.n3023685.androidica.MainActivity">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -38,7 +38,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
-                android:text="weatherBox"
+                android:text="This app requires these permissions to function. Please check your permission settings and restart the app"
                 android:textAlignment="center"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -52,13 +52,13 @@
 
             <fragment
                 android:id="@+id/locationFrag"
-                android:name="com.example.n3023685.gpspractice.ReceiverFragment"
+                android:name="com.example.n3023685.androidica.ReceiverFragment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
             <fragment
                 android:id="@+id/infoFrag"
-                android:name="com.example.n3023685.gpspractice.ReceiverFragment"
+                android:name="com.example.n3023685.androidica.ReceiverFragment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 

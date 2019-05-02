@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 26
     defaultConfig {
-        applicationId "com.example.n3023685.gpspractice"
+        applicationId "com.example.n3023685.androidica"
         minSdkVersion 26
         targetSdkVersion 26
         versionCode 1

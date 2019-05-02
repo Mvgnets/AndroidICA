@@ -1,11 +1,10 @@
-package com.example.n3023685.gpspractice;
+package com.example.n3023685.androidica;
 
 import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
@@ -18,6 +17,8 @@ public class CustomListAdapter extends ArrayAdapter {
     private final String[] nameArray;
 
     private final String[] infoArray;
+    TextView nameTextField;
+    TextView infoTextField;
 
     public CustomListAdapter(Activity context, String[] nameArrayParam, String[] infoArrayParam) {
 
@@ -42,6 +43,10 @@ public class CustomListAdapter extends ArrayAdapter {
         infoTextField.setText(infoArray[position]);
 
         return rowView;
+    }
+
+    public void colour(int position, View view, ViewGroup parent) {
+        nameTextField.setBackgroundColor(5);
 
     }
 }
