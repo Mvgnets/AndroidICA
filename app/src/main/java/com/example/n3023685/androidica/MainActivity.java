@@ -1,27 +1,24 @@
-package com.example.n3023685.gpspractice;
+package com.example.n3023685.androidica;
 
 import android.Manifest;
-import android.app.AlertDialog;
-import android.content.Context;
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.OnLifecycleEvent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.os.Handler;
-import android.os.ResultReceiver;
-import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,52 +30,45 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.api.model.PlaceLikelihood;
-import com.google.android.libraries.places.api.net.FetchPlaceRequest;
-import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
-import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static android.Manifest.permission.ACCESS_FINE_LOCATION;
-
 public class MainActivity extends AppCompatActivity {
     public static final String LatLong = "com.example.n3023685.gpspractice.LatLong";
     public static final String PlaceID = "com.example.n3023685.gpspractice.PlaceID";
     public static final String Latitude = "com.example.n3023685.gpspractice.Latitude";
     public static final String Longitude = "com.example.n3023685.gpspractice.Longitude";
-    public static final String ERROR_MESSAGE = "com.example.gpspractice.MESSAGE";
+    public static final String Current_Latitude = "com.example.n3023685.gpspractice.Current_Latitude";
+    public static final String Current_Longitude = "com.example.n3023685.gpspractice.Current_Longitude";
+    public static final String ERROR_MESSAGE = "com.example.n3023685.gpspractice.MESSAGE";
     private static final String TAG = "MainActivity";
     Place myPlace;
     private FusedLocationProviderClient fusedLocationClient;
     Intent intent;
     Intent errorIntent;
+    Intent smsIntent;
     TextView weatherBox;
     public static final String BASE_URL = "api.openweathermap.org/data/2.5/weather?";
     public static final String NOTIFICATION_CHANNEL_ID = "Weather obtained";
 
     String myLat = "1";
     String myLong = "1";
+    String currLat = "1";
+    String currLong = "1";
     String address = "";
 
     DatabaseHelper myDB;
@@ -91,73 +81,32 @@ public class MainActivity extends AppCompatActivity {
 
     TextReceiver mySMS;
 
+    CustomListAdapter myAdapter;
+
+    int FINE_LOCATION_PERMISSION_CODE = 1;
+    int COURSE_LOCATION_PERMISSION_CODE = 2;
+
+    String error = "Oops something went wrong, please restart the app and try again";
+
+    private static final String SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
+
     private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        mySMS = new TextReceiver();
-        Places.initialize(getApplicationContext(), "AIzaSyDFFv6OVh2f3f4u2KUnaIGheJObLhlHkVQ");
-        PlacesClient placesClient = Places.createClient(this);
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.RECEIVE_SMS, Manifest.permission.CALL_PHONE}, 1);
-            return; //ask for the permissions the app requires
-        }
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (location != null) {
-                            myLat = Double.toString(location.getLatitude());
-                            myLong = Double.toString(location.getLongitude());
-                            weather();
-                            address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
-                        } else {
-                            errorIntent.putExtra(ERROR_MESSAGE, "An error occurred");
-                            startActivity(errorIntent);
-                        }
-                    }
-                });
+        errorIntent = new Intent(this, ErrorActivity.class);
+        requestLocationPermission();
 
-        // Initialize the AutocompleteSupportFragment.
-        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
-                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
-        // Specify the types of place data to return.
-        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG));
-        // Set up a PlaceSelectionListener to handle the response.
-        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(Place place) {
-                // TODO: Get info about the selected place.
-                Log.i(TAG, "Place: " + place.getName() + ", " + place.getId());
-                myPlace = place;
-                placeLocation(place);
-                String[] splitter = myPlace.getLatLng().toString().split(",");
-                myLat = splitter[0].substring(10);
-                myLong = splitter[1].substring(0, 8);
-                weather();
-                address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
-            }
-            @Override
-            public void onError(Status status) {
-                // TODO: Handle the error.
-                Log.i(TAG, "An error occurred: " + status);
-                errorIntent.putExtra(ERROR_MESSAGE, "An error occurred: " + status);
-                startActivity(errorIntent);
-            }
-        });
-        intent = new Intent(this, MapsActivity.class);
-        arrayBuilder();
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position,
-                                    long id) {
-                sqlLocation(position);
-            }
-        });
     }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    public void reload() {
+        requestLocationPermission();
+    }
+
+
 
     public void sendMessage(View view) {
         String myLatLong;
@@ -173,6 +122,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             intent.putExtra(Latitude, myLat);
             intent.putExtra(Longitude, myLong);
+            intent.putExtra(Current_Latitude, currLat);
+            intent.putExtra(Current_Longitude, currLong);
         }
         startActivity(intent);
     }
@@ -201,8 +152,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.i(TAG, "An error occurred: " + error);
-                errorIntent.putExtra(ERROR_MESSAGE, "An error occurred: " + error);
-                startActivity(errorIntent);
+                Toast.makeText(MainActivity.this, "Error fetching weather for your location",
+                        Toast.LENGTH_LONG).show();
             }
         };
 
@@ -239,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
         ReceiverFragment infoFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.infoFrag);
         if (place != null) {
             locationFrag.updateText(place.getName().toString());
-            infoFrag.updateText(place.getLatLng().toString());
+            infoFrag.updateText(address);
         }
     }
 
@@ -248,13 +199,12 @@ public class MainActivity extends AppCompatActivity {
         ReceiverFragment infoFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.infoFrag);
         String[] splitter = viewRow(i).toString().split(",");
         String sqlLat = splitter[1].substring(11, 18);
-        String sqlLong = splitter[1].substring(31);
-        String name = splitter[0].substring(7);
-        locationFrag.updateText(splitter[0]);
-        infoFrag.updateText(splitter[1]);
+        String sqlLong = splitter[1].substring(31);;
         myLat = sqlLat;
         myLong = sqlLong;
         address = getAddressFromLocation(Double.parseDouble(myLat), Double.parseDouble(myLong));
+        locationFrag.updateText(splitter[0]);
+        infoFrag.updateText(address);
         weather();
     }
 
@@ -266,9 +216,14 @@ public class MainActivity extends AppCompatActivity {
         while (j < myDB.getAllData().getCount()) {
             String[] splitter = viewRow(j).toString().split(",");
             nameArray[j] = splitter[0];
+            String sqlLat = splitter[1].substring(11, 18);
+            String sqlLong = splitter[1].substring(31);;
+            myLat = sqlLat;
+            myLong = sqlLong;
+            infoArray[j] = getAddressFromLocation(Double.parseDouble(myLat), Double.parseDouble(myLong));
             j++;
         }
-        CustomListAdapter myAdapter = new CustomListAdapter(this, nameArray, infoArray);
+        myAdapter = new CustomListAdapter(this, nameArray, infoArray);
         listView = findViewById(R.id.placesListView);
         listView.setAdapter(myAdapter);
     }
@@ -288,8 +243,6 @@ public class MainActivity extends AppCompatActivity {
             if (addresses.size() > 0) {
                 Address fetchedAddress = addresses.get(0);
                 address = fetchedAddress.getSubAdminArea();
-            } else {
-                System.out.println("Searching Current Address");
             }
 
         } catch (IOException e) {
@@ -301,6 +254,115 @@ public class MainActivity extends AppCompatActivity {
     public void clearHist(View view) {
         myDB.onUpgrade(myDB.getWritableDatabase(), 1, 2);
         arrayBuilder();
+    }
+
+    public void loader(){
+        intent = new Intent(this, MapsActivity.class);
+        mySMS = new TextReceiver();
+        Places.initialize(getApplicationContext(), "AIzaSyDFFv6OVh2f3f4u2KUnaIGheJObLhlHkVQ");
+        PlacesClient placesClient = Places.createClient(this);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            myLat = Double.toString(location.getLatitude());
+                            myLong = Double.toString(location.getLongitude());
+                            currLat = Double.toString(location.getLatitude());
+                            currLong = Double.toString(location.getLongitude());
+                            weather();
+                            address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
+                        } else {
+                            error = "Cannot find current location, please check your location settings and restart the app";
+                            errorIntent.putExtra(ERROR_MESSAGE, error);
+                            startActivity(errorIntent);
+                        }
+                    }
+                });
+
+        // Initialize the AutocompleteSupportFragment.
+        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+        // Specify the types of place data to return.
+        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG));
+        // Set up a PlaceSelectionListener to handle the response.
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                // TODO: Get info about the selected place.
+                Log.i(TAG, "Place: " + place.getName() + ", " + place.getId());
+                myPlace = place;
+                String[] splitter = myPlace.getLatLng().toString().split(",");
+                myLat = splitter[0].substring(10);
+                myLong = splitter[1].substring(0, 8);
+                weather();
+                address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
+                placeLocation(place);
+            }
+            @Override
+            public void onError(Status status) {
+                // TODO: Handle the error.
+                Log.i(TAG, "An error occurred: " + status);
+                errorIntent.putExtra(ERROR_MESSAGE, "Oops! An error occurred");
+                startActivity(errorIntent);
+            }
+        });
+
+        arrayBuilder();
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position,
+                                    long id) {
+                sqlLocation(position);
+            }
+        });
+    }
+
+    private void requestLocationPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Permission needed")
+                    .setMessage("This app requires location permissions to function properly")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_PERMISSION_CODE);
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, COURSE_LOCATION_PERMISSION_CODE);
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            error = "Permissions are required for this app, please check permissions and try again";
+                            errorIntent.putExtra(ERROR_MESSAGE, error);
+                            startActivity(errorIntent);
+                        }
+                    })
+                    .create().show();
+
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_PERMISSION_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == FINE_LOCATION_PERMISSION_CODE)  {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                loader();
+            } else {
+                error = "Permissions are required for this app, please check permissions and try again";
+                errorIntent.putExtra(ERROR_MESSAGE, error);
+                startActivity(errorIntent);
+            }
+        }
     }
 
 }

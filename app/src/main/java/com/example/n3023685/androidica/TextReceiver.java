@@ -1,13 +1,10 @@
-package com.example.n3023685.gpspractice;
+package com.example.n3023685.androidica;
 
-import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
-import android.util.Log;
 import android.widget.Toast;
 
 public class TextReceiver extends BroadcastReceiver {

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.n3023685.gpspractice.MainActivity">
+    tools:context="com.example.n3023685.androidica.MainActivity">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -33,12 +33,23 @@
                 app:layout_constraintTop_toBottomOf="@+id/errorBox"
                 app:layout_constraintVertical_chainStyle="spread" />
 
+            <fragment
+                android:id="@+id/locationFrag"
+                android:name="com.example.n3023685.androidica.ReceiverFragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <fragment
+                android:id="@+id/infoFrag"
+                android:name="com.example.n3023685.androidica.ReceiverFragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
             <TextView
                 android:id="@+id/weatherBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
-                android:text="weatherBox"
                 android:textAlignment="center"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -49,18 +60,6 @@
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/autocomplete_fragment" />
-
-            <fragment
-                android:id="@+id/locationFrag"
-                android:name="com.example.n3023685.gpspractice.ReceiverFragment"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <fragment
-                android:id="@+id/infoFrag"
-                android:name="com.example.n3023685.gpspractice.ReceiverFragment"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
 
             <TextView
                 android:id="@+id/textView"

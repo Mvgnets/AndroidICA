@@ -1,4 +1,4 @@
-package com.example.n3023685.gpspractice;
+package com.example.n3023685.androidica;
 
 import android.content.ContentValues;
 import android.content.Context;
