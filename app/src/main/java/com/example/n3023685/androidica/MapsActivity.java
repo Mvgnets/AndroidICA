@@ -48,7 +48,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     float lattitude;
     float longitude;
-
     SupportMapFragment mapFragment;
     LatLng newMarker;
     Marker poiMarker;
@@ -195,14 +194,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newMarker, zoomLevel));
     }
 
+
     public void currLocation() {
         Intent intent = getIntent();
-        String currLat = intent.getStringExtra(MainActivity.Current_Latitude);
-        String currLong = intent.getStringExtra(MainActivity.Current_Longitude);
-        newMarker = new LatLng(Double.parseDouble(currLat), Double.parseDouble(currLong));
-        mMap.addMarker(new MarkerOptions().position(newMarker).title("You are here"));
-        float zoomLevel = 15.0f; //This goes up to 21
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newMarker, zoomLevel));
+        if (intent.getStringExtra(MainActivity.Current_Latitude) != null) {
+            String currLat = intent.getStringExtra(MainActivity.Current_Latitude);
+            String currLong = intent.getStringExtra(MainActivity.Current_Longitude);
+            newMarker = new LatLng(Double.parseDouble(currLat), Double.parseDouble(currLong));
+            mMap.addMarker(new MarkerOptions().position(newMarker).title("You are here"));
+            float zoomLevel = 15.0f; //This goes up to 21
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newMarker, zoomLevel));
+        }
+        else {
+            Toast.makeText(MapsActivity.this, "Error fetching current location",
+                    Toast.LENGTH_LONG).show();
+        }
     }
 
 

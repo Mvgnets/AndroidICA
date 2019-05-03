@@ -1,10 +1,12 @@
 package com.example.n3023685.androidica;
 
 import android.Manifest;
+import android.app.Activity;
 import android.arch.lifecycle.Lifecycle;
 import android.arch.lifecycle.OnLifecycleEvent;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Address;
@@ -30,10 +32,24 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStates;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.net.PlacesClient;
@@ -60,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationClient;
     Intent intent;
     Intent errorIntent;
-    Intent smsIntent;
+    Intent noLocationIntent;
     TextView weatherBox;
     public static final String BASE_URL = "api.openweathermap.org/data/2.5/weather?";
     public static final String NOTIFICATION_CHANNEL_ID = "Weather obtained";
@@ -85,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
     int FINE_LOCATION_PERMISSION_CODE = 1;
     int COURSE_LOCATION_PERMISSION_CODE = 2;
+    int REQUEST_CHECK_SETTINGS = 3;
 
     String error = "Oops something went wrong, please restart the app and try again";
 
@@ -97,15 +114,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         errorIntent = new Intent(this, ErrorActivity.class);
+        noLocationIntent = new Intent(this, NoLocationActivity.class);
         requestLocationPermission();
 
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    public void reload() {
-        requestLocationPermission();
+    @Override
+    public void onResume(){
+        super.onResume();
     }
-
 
 
     public void sendMessage(View view) {
@@ -158,7 +175,6 @@ public class MainActivity extends AppCompatActivity {
         };
 
         RequestQueue queue = Volley.newRequestQueue(this);
-
         StringRequest weatherListing = new StringRequest(
                 Request.Method.GET,
                 "http://api.openweathermap.org/data/2.5/weather?lat=" + myLat + "&lon=" + myLong + "&APPID=646c6ad8b825a8fe88fb21654deab612",
@@ -180,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         Cursor res = myDB.getRow(row);
         StringBuffer buffer = new StringBuffer();
         while (res.moveToNext()) {
-            buffer.append("Name : " + res.getString(2) + ",Latitude : " + res.getString(3).substring(10, 17) + " Longitude : " + res.getString(4).substring(0, 7));
+            buffer.append(res.getString(2) + ",Latitude : " + res.getString(3).substring(10, 17) + " Longitude : " + res.getString(4).substring(0, 7));
         }
         return buffer;
     }
@@ -280,7 +296,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
-
         // Initialize the AutocompleteSupportFragment.
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
@@ -364,6 +379,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 }
 

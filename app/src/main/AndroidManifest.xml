@@ -20,7 +20,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.example.n3023685.androidica.MainActivity">
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -40,12 +40,12 @@
             android:value="AIzaSyDFFv6OVh2f3f4u2KUnaIGheJObLhlHkVQ" />
 
         <activity
-            android:name="com.example.n3023685.androidica.MapsActivity"
+            android:name=".MapsActivity"
             android:label="@string/title_activity_maps" />
-        <activity android:name="com.example.n3023685.androidica.ErrorActivity" />
+        <activity android:name=".ErrorActivity" />
 
         <receiver
-            android:name="com.example.n3023685.androidica.TextReceiver"
+            android:name=".TextReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -53,6 +53,7 @@
             </intent-filter>
         </receiver>
 
+        <activity android:name=".NoLocationActivity"></activity>
     </application>
 
 </manifest>
