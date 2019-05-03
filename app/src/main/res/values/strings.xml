@@ -4,6 +4,6 @@
     <string name="Message1">Enter location</string>
     <string name="Message2">Max travel time</string>
     <string name="Message3">Mode of transport</string>
-    <string name="button_send">Send</string>
+    <string name="button_send">Go!</string>
     <string name="Weather">weather</string>
 </resources>

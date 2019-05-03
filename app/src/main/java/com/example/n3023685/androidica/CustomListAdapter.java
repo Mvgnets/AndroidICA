@@ -45,8 +45,4 @@ public class CustomListAdapter extends ArrayAdapter {
         return rowView;
     }
 
-    public void colour(int position, View view, ViewGroup parent) {
-        nameTextField.setBackgroundColor(5);
-
-    }
 }

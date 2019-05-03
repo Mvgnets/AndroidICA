@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.arch.lifecycle.Lifecycle;
 import android.arch.lifecycle.OnLifecycleEvent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -18,10 +19,14 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationClient;
     Intent intent;
     Intent errorIntent;
-    Intent noLocationIntent;
+
     TextView weatherBox;
     public static final String BASE_URL = "api.openweathermap.org/data/2.5/weather?";
     public static final String NOTIFICATION_CHANNEL_ID = "Weather obtained";
@@ -95,8 +100,6 @@ public class MainActivity extends AppCompatActivity {
 
     int rowNum;
 
-    TextReceiver mySMS;
-
     CustomListAdapter myAdapter;
 
     int FINE_LOCATION_PERMISSION_CODE = 1;
@@ -113,8 +116,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE); // the results will be higher than using the activity context object or the getWindowManager() shortcut
+        wm.getDefaultDisplay().getMetrics(displayMetrics);
+        int screenHeight = displayMetrics.heightPixels;
+        ListView listView = findViewById(R.id.placesListView);
+        ViewGroup.LayoutParams params = listView.getLayoutParams();
+        params.height = (int) Math.round(screenHeight / 3);
+        listView.setLayoutParams(params);
         errorIntent = new Intent(this, ErrorActivity.class);
-        noLocationIntent = new Intent(this, NoLocationActivity.class);
         requestLocationPermission();
 
     }
@@ -126,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void sendMessage(View view) {
+        //this button sends the data about the chosen location to the map activity
         String myLatLong;
         String myPlaceID;
         rowNum = myDB.getAllData().getCount() - 1;
@@ -146,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void weather() {
+        //this method uses latitude and longitude to call the OpenWeatherMap API and get the weather forecast for that location
         weatherBox = findViewById(R.id.weatherBox);
         Response.Listener<String> mResponseHandler = new Response.Listener<String>() {
             @Override
@@ -192,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public StringBuffer viewRow(int i) {
+        //this method gets calls the selected row number from the SQL database
         int row = i + 1;
         Cursor res = myDB.getRow(row);
         StringBuffer buffer = new StringBuffer();
@@ -202,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void placeLocation(Place place) {
+        //this method updates the fragments to display the chosen location info
         ReceiverFragment locationFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.locationFrag);
         ReceiverFragment infoFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.infoFrag);
         if (place != null) {
@@ -211,6 +225,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sqlLocation(int i) {
+        //this method calls a row from the SQL table and splits it into strings to update the display fragments
         ReceiverFragment locationFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.locationFrag);
         ReceiverFragment infoFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.infoFrag);
         String[] splitter = viewRow(i).toString().split(",");
@@ -225,6 +240,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void arrayBuilder() {
+        //this method uses the SQL database to build arrays for the list adapter
         myDB = new DatabaseHelper(this);
         nameArray = new String[myDB.getAllData().getCount()];
         infoArray = new String[myDB.getAllData().getCount()];
@@ -245,6 +261,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public String weatherDesc(String input) {
+        //this method splits the weather condition from the rest of the returned weather string
         final String[] weathSplitter = input.split("description");
         String weather = weathSplitter[1].substring(3);
         String[] secondSplit = weather.split(",");
@@ -252,6 +269,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String getAddressFromLocation(double latitude, double longitude) {
+        //this method uses a Geocoder to get a location name from the lat/long coordinates provided
         Geocoder geocoder = new Geocoder(this, Locale.ENGLISH);
         String address = "";
         try {
@@ -273,8 +291,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loader(){
+        //this method initialises the UI
         intent = new Intent(this, MapsActivity.class);
-        mySMS = new TextReceiver();
         Places.initialize(getApplicationContext(), "AIzaSyDFFv6OVh2f3f4u2KUnaIGheJObLhlHkVQ");
         PlacesClient placesClient = Places.createClient(this);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -335,6 +353,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestLocationPermission() {
+        //this method checks if location permissions have already been granted and requests them if not
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)) {
 
@@ -369,6 +388,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        // This method prevents the app from loading before the user has made a decision
         if (requestCode == FINE_LOCATION_PERMISSION_CODE)  {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 loader();
