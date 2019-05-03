@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -48,7 +49,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     float lattitude;
     float longitude;
-
     SupportMapFragment mapFragment;
     LatLng newMarker;
     Marker poiMarker;
@@ -92,6 +92,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private int loadedImageCount = 0;
 
     private static class CheckAllImagesLoadedHandler extends Handler {
+        //this method checks if all the available images have been downloaded
         private final WeakReference<MapsActivity> mActivity;
 
         public CheckAllImagesLoadedHandler(MapsActivity activity) {
@@ -145,6 +146,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        //this method loads the map and sets the first marker
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
         newMarker = new LatLng(lattitude, longitude);
@@ -154,6 +156,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onPoiClick(PointOfInterest poi) {
+        //this method displays a marker when a point of interest is clicked and starts downloading the images
         DisplayMetrics displayMetrics = new DisplayMetrics();
         WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE); // the results will be higher than using the activity context object or the getWindowManager() shortcut
         wm.getDefaultDisplay().getMetrics(displayMetrics);
@@ -174,6 +177,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void clear(){
+        //this method clears the markers and resizes the map
         mMap.clear();
         RelativeLayout mapLayout = findViewById(R.id.mapFrame);
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -188,6 +192,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void showLocation() {
+        // this method moves the camera and marks the users chosen location
         Intent intent = getIntent();
         newMarker = new LatLng(lattitude, longitude);
         mMap.addMarker(new MarkerOptions().position(newMarker).title("You are here"));
@@ -195,14 +200,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newMarker, zoomLevel));
     }
 
+
     public void currLocation() {
+        // this method moves the camera and marks the users current location
         Intent intent = getIntent();
-        String currLat = intent.getStringExtra(MainActivity.Current_Latitude);
-        String currLong = intent.getStringExtra(MainActivity.Current_Longitude);
-        newMarker = new LatLng(Double.parseDouble(currLat), Double.parseDouble(currLong));
-        mMap.addMarker(new MarkerOptions().position(newMarker).title("You are here"));
-        float zoomLevel = 15.0f; //This goes up to 21
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newMarker, zoomLevel));
+        if (intent.getStringExtra(MainActivity.Current_Latitude) != null) {
+            String currLat = intent.getStringExtra(MainActivity.Current_Latitude);
+            String currLong = intent.getStringExtra(MainActivity.Current_Longitude);
+            newMarker = new LatLng(Double.parseDouble(currLat), Double.parseDouble(currLong));
+            mMap.addMarker(new MarkerOptions().position(newMarker).title("You are here"));
+            float zoomLevel = 15.0f; //This goes up to 21
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newMarker, zoomLevel));
+        }
+        else {
+            Toast.makeText(MapsActivity.this, "Error fetching current location",
+                    Toast.LENGTH_LONG).show();
+        }
     }
 
 
@@ -211,12 +224,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void initPlacesClient() {
+        //this method initializes the Google Places client
         final String apiKey = "AIzaSyDFFv6OVh2f3f4u2KUnaIGheJObLhlHkVQ";
         // Initialize Places.
         Places.initialize(getApplicationContext(), apiKey);
     }
 
     private void getPlaceInformation() {
+        //this method attempts to find the information associated with the point of interest that has been clicked
         placesClient = Places.createClient(this);
 
         final List<Place.Field> placeFields = Arrays.asList(Place.Field.ADDRESS, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.PHOTO_METADATAS);
@@ -254,6 +269,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void fetchPlacePhotos(final PlacesClient placesClient) {
+        //this method attempts to download hte images associated with a clicked point of interest
+
         // Get the photo metadata.
         if (mPlace.getPhotoMetadatas() != null) {
             mPlaceModels = new PlaceModel[mPlace.getPhotoMetadatas().size()];
@@ -295,6 +312,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void initRecyclerView() {
+        //this method initialises the recycler view to display the downloaded images
         mRecyclerView = findViewById(R.id.placeImagesRecyclerView);
         mRecyclerViewLayoutManager = new LinearLayoutManager(this);
         ((LinearLayoutManager) mRecyclerViewLayoutManager).setOrientation(LinearLayout.HORIZONTAL);
@@ -303,5 +321,4 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mRecyclerView.setAdapter(mRecyclerViewAdapter);
         mRecyclerView.setVisibility(View.VISIBLE);
     }
-
 }
