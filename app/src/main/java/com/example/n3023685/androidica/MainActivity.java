@@ -1,13 +1,9 @@
 package com.example.n3023685.androidica;
 
 import android.Manifest;
-import android.app.Activity;
-import android.arch.lifecycle.Lifecycle;
-import android.arch.lifecycle.OnLifecycleEvent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Address;
@@ -15,7 +11,6 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,7 +21,6 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,24 +31,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResolvableApiException;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStates;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.net.PlacesClient;
@@ -78,14 +58,10 @@ public class MainActivity extends AppCompatActivity {
     public static final String ERROR_MESSAGE = "com.example.n3023685.gpspractice.MESSAGE";
     private static final String TAG = "MainActivity";
     Place myPlace;
-    private FusedLocationProviderClient fusedLocationClient;
     Intent intent;
     Intent errorIntent;
 
     TextView weatherBox;
-    public static final String BASE_URL = "api.openweathermap.org/data/2.5/weather?";
-    public static final String NOTIFICATION_CHANNEL_ID = "Weather obtained";
-
     String myLat = "1";
     String myLong = "1";
     String currLat = "1";
@@ -104,13 +80,8 @@ public class MainActivity extends AppCompatActivity {
 
     int FINE_LOCATION_PERMISSION_CODE = 1;
     int COURSE_LOCATION_PERMISSION_CODE = 2;
-    int REQUEST_CHECK_SETTINGS = 3;
 
     String error = "Oops something went wrong, please restart the app and try again";
-
-    private static final String SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
-
-    private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,15 +93,14 @@ public class MainActivity extends AppCompatActivity {
         int screenHeight = displayMetrics.heightPixels;
         ListView listView = findViewById(R.id.placesListView);
         ViewGroup.LayoutParams params = listView.getLayoutParams();
-        params.height = (int) Math.round(screenHeight / 3);
+        params.height = Math.round(screenHeight / 3);
         listView.setLayoutParams(params);
         errorIntent = new Intent(this, ErrorActivity.class);
         requestLocationPermission();
-
     }
 
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
     }
 
@@ -144,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
             String[] splitter = myPlace.getLatLng().toString().split(",");
             myDB.insertData(rowNum + 1, myPlace.getName(), splitter[0], splitter[1]);
             myLatLong = myPlace.getLatLng().toString();
-            myPlaceID = myPlace.getId().toString();
+            myPlaceID = myPlace.getId();
             intent.putExtra(LatLong, myLatLong);
             intent.putExtra(PlaceID, myPlaceID);
         } else {
@@ -165,10 +135,9 @@ public class MainActivity extends AppCompatActivity {
                 final String[] tempSplitter = response.split("temp");
                 String temperature = tempSplitter[1].substring(2, 5);
                 String weather = weatherDesc(response);
-                if (!address.isEmpty()){
+                if (!address.isEmpty()) {
                     weatherBox.setText("The temperature in " + address + " is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C with " + weather);
-                }
-                else{
+                } else {
                     if (myPlace != null) {
                         weatherBox.setText("The temperature at your chosen location is: " + (Math.round(Double.parseDouble(temperature) - 273.15)) + "\u00b0 C with " + weather);
                     } else {
@@ -219,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
         ReceiverFragment locationFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.locationFrag);
         ReceiverFragment infoFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.infoFrag);
         if (place != null) {
-            locationFrag.updateText(place.getName().toString());
+            locationFrag.updateText(place.getName());
             infoFrag.updateText(address);
         }
     }
@@ -230,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         ReceiverFragment infoFrag = (ReceiverFragment) getFragmentManager().findFragmentById(R.id.infoFrag);
         String[] splitter = viewRow(i).toString().split(",");
         String sqlLat = splitter[1].substring(11, 18);
-        String sqlLong = splitter[1].substring(31);;
+        String sqlLong = splitter[1].substring(31);
         myLat = sqlLat;
         myLong = sqlLong;
         address = getAddressFromLocation(Double.parseDouble(myLat), Double.parseDouble(myLong));
@@ -249,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
             String[] splitter = viewRow(j).toString().split(",");
             nameArray[j] = splitter[0];
             String sqlLat = splitter[1].substring(11, 18);
-            String sqlLong = splitter[1].substring(31);;
+            String sqlLong = splitter[1].substring(31);
             myLat = sqlLat;
             myLong = sqlLong;
             infoArray[j] = getAddressFromLocation(Double.parseDouble(myLat), Double.parseDouble(myLong));
@@ -290,12 +259,11 @@ public class MainActivity extends AppCompatActivity {
         arrayBuilder();
     }
 
-    public void loader(){
+    public void loader() {
         //this method initialises the UI
         intent = new Intent(this, MapsActivity.class);
         Places.initialize(getApplicationContext(), "AIzaSyDFFv6OVh2f3f4u2KUnaIGheJObLhlHkVQ");
-        PlacesClient placesClient = Places.createClient(this);
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         fusedLocationClient.getLastLocation()
                 .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                     @Override
@@ -306,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
                             currLat = Double.toString(location.getLatitude());
                             currLong = Double.toString(location.getLongitude());
                             weather();
-                            address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
+                            address = getAddressFromLocation(Double.parseDouble(myLat), Double.parseDouble(myLong));
                         } else {
                             error = "Cannot find current location, please check your location settings and restart the app";
                             errorIntent.putExtra(ERROR_MESSAGE, error);
@@ -330,9 +298,10 @@ public class MainActivity extends AppCompatActivity {
                 myLat = splitter[0].substring(10);
                 myLong = splitter[1].substring(0, 8);
                 weather();
-                address = getAddressFromLocation(Double.parseDouble(myLat),Double.parseDouble(myLong));
+                address = getAddressFromLocation(Double.parseDouble(myLat), Double.parseDouble(myLong));
                 placeLocation(place);
             }
+
             @Override
             public void onError(Status status) {
                 // TODO: Handle the error.
@@ -364,9 +333,9 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             ActivityCompat.requestPermissions(MainActivity.this,
-                                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_PERMISSION_CODE);
+                                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_PERMISSION_CODE);
                             ActivityCompat.requestPermissions(MainActivity.this,
-                                    new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, COURSE_LOCATION_PERMISSION_CODE);
+                                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, COURSE_LOCATION_PERMISSION_CODE);
                         }
                     })
                     .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
@@ -379,17 +348,16 @@ public class MainActivity extends AppCompatActivity {
                         }
                     })
                     .create().show();
-
         } else {
             ActivityCompat.requestPermissions(this,
-                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_PERMISSION_CODE);
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_PERMISSION_CODE);
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         // This method prevents the app from loading before the user has made a decision
-        if (requestCode == FINE_LOCATION_PERMISSION_CODE)  {
+        if (requestCode == FINE_LOCATION_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 loader();
             } else {
