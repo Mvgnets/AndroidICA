@@ -52,18 +52,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     SupportMapFragment mapFragment;
     LatLng newMarker;
     Marker poiMarker;
-    public final String TAG = MainActivity.class.getSimpleName();
+    public final String TAG = MapsActivity.class.getSimpleName();
 
     //private PlacesClient mPlacesClient;
     private Place mPlace;
     private PlacesClient placesClient;
 
-    private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mRecyclerViewAdapter;
-    private RecyclerView.LayoutManager mRecyclerViewLayoutManager;
-
     private PlaceModel[] mPlaceModels;
     String myPlaceId = "ChIJ71jChRHtfkgRPwv2TqaUCnA";
+
 
 
     private final OnFailureListener mFailureListener = new OnFailureListener() {
@@ -106,9 +103,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.i(mActivity.get().TAG, "Checking if all the images have fully loaded");
 
                 if (mActivity.get().loadedImageCount == mActivity.get().mPlaceModels.length) {
-                    // If we get here then all the images have been loaded.
-                    // At this stage we're now ready to set up the recyclerview.
-                    //
                     mActivity.get().initRecyclerView();
                 } else {
                     mActivity.get().instigateAllImageLoadedCheck();
@@ -193,7 +187,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void showLocation() {
         // this method moves the camera and marks the users chosen location
-        Intent intent = getIntent();
         newMarker = new LatLng(lattitude, longitude);
         mMap.addMarker(new MarkerOptions().position(newMarker).title("You are here"));
         float zoomLevel = 15.0f; //This goes up to 21
@@ -247,10 +240,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             public void onSuccess(final FetchPlaceResponse fetchPlaceResponse) {
 
                                 mPlace = fetchPlaceResponse.getPlace();
-
-                                final String details = mPlace.getName() +
-                                        ", " +
-                                        mPlace.getAddress();
                                 fetchPlacePhotos(placesClient);
                             }
                         }
@@ -313,11 +302,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void initRecyclerView() {
         //this method initialises the recycler view to display the downloaded images
-        mRecyclerView = findViewById(R.id.placeImagesRecyclerView);
-        mRecyclerViewLayoutManager = new LinearLayoutManager(this);
+        RecyclerView mRecyclerView = findViewById(R.id.placeImagesRecyclerView);
+        RecyclerView.LayoutManager mRecyclerViewLayoutManager = new LinearLayoutManager(this);
         ((LinearLayoutManager) mRecyclerViewLayoutManager).setOrientation(LinearLayout.HORIZONTAL);
         mRecyclerView.setLayoutManager(mRecyclerViewLayoutManager);
-        mRecyclerViewAdapter = new PlacesImagesRecyclerViewAdapter(mPlaceModels);
+        RecyclerView.Adapter mRecyclerViewAdapter = new PlacesImagesRecyclerViewAdapter(mPlaceModels);
         mRecyclerView.setAdapter(mRecyclerViewAdapter);
         mRecyclerView.setVisibility(View.VISIBLE);
     }

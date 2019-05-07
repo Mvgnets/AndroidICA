@@ -2,10 +2,6 @@ package com.example.n3023685.androidica;
 
 import android.graphics.Bitmap;
 
-/**
- * Created by n3023685 on 01/05/19.
- */
-
 public class PlaceModel {
     private Bitmap mBitmap;
     private final String mInfo;
